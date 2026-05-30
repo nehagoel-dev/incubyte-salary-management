@@ -2,7 +2,9 @@ import type { RequestHandler } from 'express';
 import { z } from 'zod';
 import {
   createEmployeeSchema,
+  updateEmployeeSchema,
   type CreateEmployeeInput,
+  type UpdateEmployeeInput,
 } from '../schemas/employee.schema.js';
 
 /** Port the controller needs — satisfied structurally by EmployeeService. */
@@ -10,6 +12,7 @@ export interface EmployeeListService {
   list(params: { page: number; pageSize: number }): Promise<unknown>;
   getById(id: string): Promise<unknown>;
   create(data: CreateEmployeeInput): Promise<unknown>;
+  update(id: string, data: UpdateEmployeeInput): Promise<unknown>;
 }
 
 const listQuerySchema = z.object({
@@ -47,5 +50,15 @@ export function makeEmployeeController(service: EmployeeListService) {
     }
   };
 
-  return { list, getById, create };
+  const update: RequestHandler = async (req, res, next) => {
+    try {
+      const data = updateEmployeeSchema.parse(req.body);
+      const updated = await service.update(req.params.id, data);
+      res.json(updated);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  return { list, getById, create, update };
 }

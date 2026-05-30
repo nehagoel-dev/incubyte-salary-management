@@ -1,6 +1,9 @@
 import type { Employee } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
-import type { CreateEmployeeInput } from '../schemas/employee.schema.js';
+import type {
+  CreateEmployeeInput,
+  UpdateEmployeeInput,
+} from '../schemas/employee.schema.js';
 
 export class EmployeeRepository {
   findMany(args: { skip: number; take: number }): Promise<Employee[]> {
@@ -17,5 +20,9 @@ export class EmployeeRepository {
 
   create(data: CreateEmployeeInput): Promise<Employee> {
     return prisma.employee.create({ data });
+  }
+
+  update(id: string, data: UpdateEmployeeInput): Promise<Employee> {
+    return prisma.employee.update({ where: { id }, data });
   }
 }

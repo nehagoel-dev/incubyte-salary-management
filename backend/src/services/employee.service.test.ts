@@ -106,3 +106,69 @@ describe('EmployeeService.create', () => {
     ).rejects.toBeInstanceOf(ConflictError);
   });
 });
+
+describe('EmployeeService.update', () => {
+  const patch = { jobTitle: 'Senior Engineer' };
+
+  it('forwards to repo.update and returns the updated employee', async () => {
+    const updated = { id: 'e1', jobTitle: 'Senior Engineer' };
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn().mockResolvedValue(updated),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    const result = await service.update(
+      'e1',
+      patch as Parameters<EmployeeService['update']>[1],
+    );
+
+    expect(repo.update).toHaveBeenCalledWith('e1', patch);
+    expect(result).toBe(updated);
+  });
+
+  it('maps Prisma P2025 (record not found) to NotFoundError', async () => {
+    const p2025 = Object.assign(new Error('Record to update not found'), {
+      code: 'P2025',
+    });
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn().mockRejectedValue(p2025),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    await expect(
+      service.update('missing', patch as Parameters<EmployeeService['update']>[1]),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('maps Prisma P2002 (duplicate) to ConflictError', async () => {
+    const p2002 = Object.assign(new Error('Unique constraint failed'), {
+      code: 'P2002',
+    });
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn().mockRejectedValue(p2002),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    await expect(
+      service.update('e1', patch as Parameters<EmployeeService['update']>[1]),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+});

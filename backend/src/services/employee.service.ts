@@ -1,22 +1,29 @@
 import type { Employee } from '@prisma/client';
 import { NotFoundError, ConflictError } from './../lib/errors.js';
-import type { CreateEmployeeInput } from '../schemas/employee.schema.js';
+import type {
+  CreateEmployeeInput,
+  UpdateEmployeeInput,
+} from '../schemas/employee.schema.js';
 
 export interface EmployeeReadRepository {
   findMany(args: { skip: number; take: number }): Promise<Employee[]>;
   count(): Promise<number>;
   findById(id: string): Promise<Employee | null>;
   create(data: CreateEmployeeInput): Promise<Employee>;
+  update(id: string, data: UpdateEmployeeInput): Promise<Employee>;
 }
 
-function isUniqueConstraintError(err: unknown): boolean {
+function hasPrismaCode(err: unknown, code: string): boolean {
   return (
     typeof err === 'object' &&
     err !== null &&
     'code' in err &&
-    (err as { code: unknown }).code === 'P2002'
+    (err as { code: unknown }).code === code
   );
 }
+
+const isUniqueConstraintError = (err: unknown): boolean => hasPrismaCode(err, 'P2002');
+const isRecordNotFoundError = (err: unknown): boolean => hasPrismaCode(err, 'P2025');
 
 export interface Paginated<T> {
   data: T[];
@@ -55,6 +62,20 @@ export class EmployeeService {
     try {
       return await this.repo.create(data);
     } catch (err) {
+      if (isUniqueConstraintError(err)) {
+        throw new ConflictError('An employee with this email already exists');
+      }
+      throw err;
+    }
+  }
+
+  async update(id: string, data: UpdateEmployeeInput): Promise<Employee> {
+    try {
+      return await this.repo.update(id, data);
+    } catch (err) {
+      if (isRecordNotFoundError(err)) {
+        throw new NotFoundError(`Employee ${id} not found`);
+      }
       if (isUniqueConstraintError(err)) {
         throw new ConflictError('An employee with this email already exists');
       }

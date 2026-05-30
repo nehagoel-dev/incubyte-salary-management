@@ -4,10 +4,11 @@ import { NotFoundError, ConflictError } from '../lib/errors.js';
 
 // Mock the service module so no real repository/DB is ever touched.
 // `vi.hoisted` lets the shared mocks be referenced inside the hoisted vi.mock factory.
-const { listMock, getByIdMock, createMock } = vi.hoisted(() => ({
+const { listMock, getByIdMock, createMock, updateMock } = vi.hoisted(() => ({
   listMock: vi.fn(),
   getByIdMock: vi.fn(),
   createMock: vi.fn(),
+  updateMock: vi.fn(),
 }));
 
 vi.mock('../services/employee.service.js', () => ({
@@ -15,6 +16,7 @@ vi.mock('../services/employee.service.js', () => ({
     list: listMock,
     getById: getByIdMock,
     create: createMock,
+    update: updateMock,
   })),
 }));
 
@@ -184,6 +186,60 @@ describe('POST /api/employees', () => {
     createMock.mockRejectedValueOnce(new ConflictError('Email already exists'));
 
     const res = await request(createApp()).post('/api/employees').send(validBody);
+
+    expect(res.status).toBe(409);
+    expect(res.body).toHaveProperty('error');
+  });
+});
+
+describe('PATCH /api/employees/:id', () => {
+  it('returns 200 with the updated employee for a valid partial body', async () => {
+    const updated = { id: 'e1', jobTitle: 'Senior Engineer' };
+    updateMock.mockResolvedValue(updated);
+
+    const res = await request(createApp())
+      .patch('/api/employees/e1')
+      .send({ jobTitle: 'Senior Engineer' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(updated);
+    expect(updateMock).toHaveBeenCalledWith('e1', { jobTitle: 'Senior Engineer' });
+  });
+
+  it('returns 404 when the service throws NotFoundError (unknown id)', async () => {
+    updateMock.mockRejectedValueOnce(new NotFoundError('Employee not found'));
+
+    const res = await request(createApp())
+      .patch('/api/employees/missing')
+      .send({ jobTitle: 'Senior Engineer' });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('returns 400 for an invalid field value and does NOT call the service', async () => {
+    const res = await request(createApp())
+      .patch('/api/employees/e1')
+      .send({ email: 'not-an-email' });
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('email');
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for an empty body and does NOT call the service', async () => {
+    const res = await request(createApp()).patch('/api/employees/e1').send({});
+
+    expect(res.status).toBe(400);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when the service throws ConflictError (duplicate email)', async () => {
+    updateMock.mockRejectedValueOnce(new ConflictError('Email already exists'));
+
+    const res = await request(createApp())
+      .patch('/api/employees/e1')
+      .send({ email: 'taken@example.com' });
 
     expect(res.status).toBe(409);
     expect(res.body).toHaveProperty('error');

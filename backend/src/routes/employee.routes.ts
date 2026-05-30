@@ -10,5 +10,6 @@ export function createEmployeeRouter(service: EmployeeListService): Router {
   router.get('/employees', controller.list);
   router.get('/employees/:id', controller.getById);
   router.post('/employees', controller.create);
+  router.patch('/employees/:id', controller.update);
   return router;
 }
