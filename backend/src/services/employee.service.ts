@@ -1,8 +1,10 @@
 import type { Employee } from '@prisma/client';
+import { NotFoundError } from './../lib/errors.js';
 
 export interface EmployeeReadRepository {
   findMany(args: { skip: number; take: number }): Promise<Employee[]>;
   count(): Promise<number>;
+  findById(id: string): Promise<Employee | null>;
 }
 
 export interface Paginated<T> {
@@ -28,5 +30,13 @@ export class EmployeeService {
       this.repo.count(),
     ]);
     return { data, total, page, pageSize };
+  }
+
+  async getById(id: string): Promise<Employee> {
+    const employee = await this.repo.findById(id);
+    if (employee === null) {
+      throw new NotFoundError(`Employee ${id} not found`);
+    }
+    return employee;
   }
 }

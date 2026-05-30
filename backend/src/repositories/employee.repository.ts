@@ -9,4 +9,8 @@ export class EmployeeRepository {
   count(): Promise<number> {
     return prisma.employee.count();
   }
+
+  findById(id: string): Promise<Employee | null> {
+    return prisma.employee.findUnique({ where: { id } });
+  }
 }

@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
+import { NotFoundError } from '../lib/errors.js';
 
 // Mock the service module so no real repository/DB is ever touched.
-// `vi.hoisted` lets the shared mock be referenced inside the hoisted vi.mock factory.
-const { listMock } = vi.hoisted(() => ({ listMock: vi.fn() }));
+// `vi.hoisted` lets the shared mocks be referenced inside the hoisted vi.mock factory.
+const { listMock, getByIdMock } = vi.hoisted(() => ({
+  listMock: vi.fn(),
+  getByIdMock: vi.fn(),
+}));
 
 vi.mock('../services/employee.service.js', () => ({
-  EmployeeService: vi.fn(() => ({ list: listMock })),
+  EmployeeService: vi.fn(() => ({ list: listMock, getById: getByIdMock })),
 }));
 
 import { createApp } from '../app.js';
@@ -69,5 +73,27 @@ describe('GET /api/employees', () => {
     expect(res.body).toHaveProperty('error');
     expect(res.body).not.toHaveProperty('stack');
     expect(JSON.stringify(res.body)).not.toContain('SUPER_SECRET_STACK');
+  });
+});
+
+describe('GET /api/employees/:id', () => {
+  it('returns 200 with the employee when found', async () => {
+    const employee = { id: 'e1', firstName: 'Ada' };
+    getByIdMock.mockResolvedValue(employee);
+
+    const res = await request(createApp()).get('/api/employees/e1');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(employee);
+    expect(getByIdMock).toHaveBeenCalledWith('e1');
+  });
+
+  it('returns 404 with a JSON error body when the service throws NotFoundError', async () => {
+    getByIdMock.mockRejectedValueOnce(new NotFoundError('Employee not found'));
+
+    const res = await request(createApp()).get('/api/employees/missing');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error');
   });
 });

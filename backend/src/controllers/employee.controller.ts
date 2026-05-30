@@ -4,6 +4,7 @@ import { z } from 'zod';
 /** Port the controller needs — satisfied structurally by EmployeeService. */
 export interface EmployeeListService {
   list(params: { page: number; pageSize: number }): Promise<unknown>;
+  getById(id: string): Promise<unknown>;
 }
 
 const listQuerySchema = z.object({
@@ -22,5 +23,14 @@ export function makeEmployeeController(service: EmployeeListService) {
     }
   };
 
-  return { list };
+  const getById: RequestHandler = async (req, res, next) => {
+    try {
+      const result = await service.getById(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  return { list, getById };
 }
