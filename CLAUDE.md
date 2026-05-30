@@ -32,3 +32,9 @@ Money is stored as integer minor units (`*_cents`) plus an ISO currency code. Ne
 - ESM, async/await, no `any` unless justified with a comment.
 - Errors: throw typed errors in services; map to HTTP status in a central error handler.
 - Pagination: offset-based (`page`, `pageSize`) returning `{ data, total, page, pageSize }`.
+
+## AI usage log
+- After each completed step, append a short entry to `docs/ai-notes.md` containing:
+  the step name, the key prompt I gave you (trimmed), the design decision made, and any
+  course-correction I asked for. Keep entries to a few lines. Do not invent decisions;
+  only record what actually happened in this session.
