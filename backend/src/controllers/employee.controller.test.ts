@@ -1,16 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ConflictError } from '../lib/errors.js';
 
 // Mock the service module so no real repository/DB is ever touched.
 // `vi.hoisted` lets the shared mocks be referenced inside the hoisted vi.mock factory.
-const { listMock, getByIdMock } = vi.hoisted(() => ({
+const { listMock, getByIdMock, createMock } = vi.hoisted(() => ({
   listMock: vi.fn(),
   getByIdMock: vi.fn(),
+  createMock: vi.fn(),
 }));
 
 vi.mock('../services/employee.service.js', () => ({
-  EmployeeService: vi.fn(() => ({ list: listMock, getById: getByIdMock })),
+  EmployeeService: vi.fn(() => ({
+    list: listMock,
+    getById: getByIdMock,
+    create: createMock,
+  })),
 }));
 
 import { createApp } from '../app.js';
@@ -94,6 +99,93 @@ describe('GET /api/employees/:id', () => {
     const res = await request(createApp()).get('/api/employees/missing');
 
     expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error');
+  });
+});
+
+describe('POST /api/employees', () => {
+  const validBody = {
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+    department: 'Engineering',
+    jobTitle: 'Engineer',
+    country: 'GB',
+    currency: 'GBP',
+    baseSalaryCents: 5_000_000,
+    employmentType: 'FULL_TIME',
+    hireDate: '2020-01-15',
+  };
+
+  it('returns 201 with the created employee for a valid body', async () => {
+    const created = { id: 'e1', ...validBody };
+    createMock.mockResolvedValue(created);
+
+    const res = await request(createApp()).post('/api/employees').send(validBody);
+
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual(created);
+    expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 400 and does NOT call the service for an invalid email', async () => {
+    const res = await request(createApp())
+      .post('/api/employees')
+      .send({ ...validBody, email: 'not-an-email' });
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('email');
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when baseSalaryCents <= 0', async () => {
+    const res = await request(createApp())
+      .post('/api/employees')
+      .send({ ...validBody, baseSalaryCents: 0 });
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('baseSalaryCents');
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for a wrong-length country code', async () => {
+    const res = await request(createApp())
+      .post('/api/employees')
+      .send({ ...validBody, country: 'GBR' });
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('country');
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for a wrong-length currency code', async () => {
+    const res = await request(createApp())
+      .post('/api/employees')
+      .send({ ...validBody, currency: 'GB' });
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('currency');
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when a required field is missing', async () => {
+    const { firstName, ...withoutFirstName } = validBody;
+    void firstName;
+    const res = await request(createApp())
+      .post('/api/employees')
+      .send(withoutFirstName);
+
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('firstName');
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when the service throws ConflictError (duplicate email)', async () => {
+    createMock.mockRejectedValueOnce(new ConflictError('Email already exists'));
+
+    const res = await request(createApp()).post('/api/employees').send(validBody);
+
+    expect(res.status).toBe(409);
     expect(res.body).toHaveProperty('error');
   });
 });

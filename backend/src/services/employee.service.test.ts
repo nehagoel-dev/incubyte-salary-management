@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { EmployeeService } from './employee.service.js';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ConflictError } from '../lib/errors.js';
 
 describe('EmployeeService.list', () => {
   it('returns { data, total, page, pageSize } and queries the repo with the right offset', async () => {
@@ -50,5 +50,59 @@ describe('EmployeeService.getById', () => {
     );
 
     await expect(service.getById('missing')).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe('EmployeeService.create', () => {
+  const input = {
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+    department: 'Engineering',
+    jobTitle: 'Engineer',
+    country: 'GB',
+    currency: 'GBP',
+    baseSalaryCents: 5_000_000,
+    employmentType: 'FULL_TIME',
+    hireDate: new Date('2020-01-15'),
+  };
+
+  it('forwards validated data to repo.create and returns the created employee', async () => {
+    const created = { id: 'e1', ...input };
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn().mockResolvedValue(created),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    const result = await service.create(
+      input as Parameters<EmployeeService['create']>[0],
+    );
+
+    expect(repo.create).toHaveBeenCalledWith(input);
+    expect(result).toBe(created);
+  });
+
+  it('throws ConflictError on a Prisma P2002 unique-constraint error', async () => {
+    const p2002 = Object.assign(new Error('Unique constraint failed'), {
+      code: 'P2002',
+    });
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn().mockRejectedValue(p2002),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    await expect(
+      service.create(input as Parameters<EmployeeService['create']>[0]),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 });
