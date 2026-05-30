@@ -11,5 +11,6 @@ export function createEmployeeRouter(service: EmployeeListService): Router {
   router.get('/employees/:id', controller.getById);
   router.post('/employees', controller.create);
   router.patch('/employees/:id', controller.update);
+  router.delete('/employees/:id', controller.remove);
   return router;
 }

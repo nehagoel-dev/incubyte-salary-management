@@ -4,12 +4,15 @@ import { NotFoundError, ConflictError } from '../lib/errors.js';
 
 // Mock the service module so no real repository/DB is ever touched.
 // `vi.hoisted` lets the shared mocks be referenced inside the hoisted vi.mock factory.
-const { listMock, getByIdMock, createMock, updateMock } = vi.hoisted(() => ({
-  listMock: vi.fn(),
-  getByIdMock: vi.fn(),
-  createMock: vi.fn(),
-  updateMock: vi.fn(),
-}));
+const { listMock, getByIdMock, createMock, updateMock, deleteMock } = vi.hoisted(
+  () => ({
+    listMock: vi.fn(),
+    getByIdMock: vi.fn(),
+    createMock: vi.fn(),
+    updateMock: vi.fn(),
+    deleteMock: vi.fn(),
+  }),
+);
 
 vi.mock('../services/employee.service.js', () => ({
   EmployeeService: vi.fn(() => ({
@@ -17,6 +20,7 @@ vi.mock('../services/employee.service.js', () => ({
     getById: getByIdMock,
     create: createMock,
     update: updateMock,
+    delete: deleteMock,
   })),
 }));
 
@@ -242,6 +246,28 @@ describe('PATCH /api/employees/:id', () => {
       .send({ email: 'taken@example.com' });
 
     expect(res.status).toBe(409);
+    expect(res.body).toHaveProperty('error');
+  });
+});
+
+describe('DELETE /api/employees/:id', () => {
+  it('returns 204 with no body on success', async () => {
+    deleteMock.mockResolvedValue(undefined);
+
+    const res = await request(createApp()).delete('/api/employees/e1');
+
+    expect(res.status).toBe(204);
+    expect(res.body).toEqual({});
+    expect(res.text).toBe('');
+    expect(deleteMock).toHaveBeenCalledWith('e1');
+  });
+
+  it('returns 404 when the service throws NotFoundError (unknown id)', async () => {
+    deleteMock.mockRejectedValueOnce(new NotFoundError('Employee not found'));
+
+    const res = await request(createApp()).delete('/api/employees/missing');
+
+    expect(res.status).toBe(404);
     expect(res.body).toHaveProperty('error');
   });
 });

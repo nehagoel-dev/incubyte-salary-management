@@ -11,6 +11,7 @@ export interface EmployeeReadRepository {
   findById(id: string): Promise<Employee | null>;
   create(data: CreateEmployeeInput): Promise<Employee>;
   update(id: string, data: UpdateEmployeeInput): Promise<Employee>;
+  delete(id: string): Promise<void>;
 }
 
 function hasPrismaCode(err: unknown, code: string): boolean {
@@ -78,6 +79,17 @@ export class EmployeeService {
       }
       if (isUniqueConstraintError(err)) {
         throw new ConflictError('An employee with this email already exists');
+      }
+      throw err;
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      await this.repo.delete(id);
+    } catch (err) {
+      if (isRecordNotFoundError(err)) {
+        throw new NotFoundError(`Employee ${id} not found`);
       }
       throw err;
     }

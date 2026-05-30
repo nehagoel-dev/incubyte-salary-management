@@ -13,6 +13,7 @@ export interface EmployeeListService {
   getById(id: string): Promise<unknown>;
   create(data: CreateEmployeeInput): Promise<unknown>;
   update(id: string, data: UpdateEmployeeInput): Promise<unknown>;
+  delete(id: string): Promise<unknown>;
 }
 
 const listQuerySchema = z.object({
@@ -60,5 +61,14 @@ export function makeEmployeeController(service: EmployeeListService) {
     }
   };
 
-  return { list, getById, create, update };
+  const remove: RequestHandler = async (req, res, next) => {
+    try {
+      await service.delete(req.params.id);
+      res.status(204).end();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  return { list, getById, create, update, remove };
 }

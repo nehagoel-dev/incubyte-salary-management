@@ -25,4 +25,8 @@ export class EmployeeRepository {
   update(id: string, data: UpdateEmployeeInput): Promise<Employee> {
     return prisma.employee.update({ where: { id }, data });
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.employee.delete({ where: { id } });
+  }
 }

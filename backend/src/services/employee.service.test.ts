@@ -172,3 +172,42 @@ describe('EmployeeService.update', () => {
     ).rejects.toBeInstanceOf(ConflictError);
   });
 });
+
+describe('EmployeeService.delete', () => {
+  it('calls repo.delete with the id', async () => {
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    await service.delete('e1');
+
+    expect(repo.delete).toHaveBeenCalledWith('e1');
+  });
+
+  it('maps Prisma P2025 (record not found) to NotFoundError', async () => {
+    const p2025 = Object.assign(new Error('Record to delete does not exist'), {
+      code: 'P2025',
+    });
+    const repo = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn().mockRejectedValue(p2025),
+    };
+    const service = new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+
+    await expect(service.delete('missing')).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
