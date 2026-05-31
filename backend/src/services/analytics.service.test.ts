@@ -110,3 +110,53 @@ describe('AnalyticsService.getByDepartment', () => {
     ]);
   });
 });
+
+describe('AnalyticsService.getByCountry', () => {
+  beforeEach(() => { findAllForAnalytics.mockReset(); });
+
+  it('empty dataset returns []', async () => {
+    findAllForAnalytics.mockResolvedValue([]);
+    const service = new AnalyticsService(makeRepo());
+    expect(await service.getByCountry()).toEqual([]);
+  });
+
+  it('Dataset A: 3 countries sorted alphabetically with correct stats', async () => {
+    findAllForAnalytics.mockResolvedValue([
+      { baseSalaryCents: 50000, currency: 'USD', department: 'Engineering', country: 'US' },
+      { baseSalaryCents: 100000, currency: 'EUR', department: 'Engineering', country: 'DE' },
+      { baseSalaryCents: 800000, currency: 'INR', department: 'Sales', country: 'IN' },
+      { baseSalaryCents: 60000, currency: 'USD', department: 'Sales', country: 'US' },
+    ]);
+    const service = new AnalyticsService(makeRepo());
+    expect(await service.getByCountry()).toEqual([
+      { country: 'DE', headcount: 1, totalPayrollUsdCents: 109000, averageSalaryUsdCents: 109000, medianSalaryUsdCents: 109000 },
+      { country: 'IN', headcount: 1, totalPayrollUsdCents: 9600, averageSalaryUsdCents: 9600, medianSalaryUsdCents: 9600 },
+      { country: 'US', headcount: 2, totalPayrollUsdCents: 110000, averageSalaryUsdCents: 55000, medianSalaryUsdCents: 55000 },
+    ]);
+  });
+
+  it('odd-count median per country', async () => {
+    findAllForAnalytics.mockResolvedValue([
+      { baseSalaryCents: 50000, currency: 'USD', department: 'Engineering', country: 'US' },
+      { baseSalaryCents: 100000, currency: 'EUR', department: 'Engineering', country: 'DE' },
+      { baseSalaryCents: 800000, currency: 'INR', department: 'Sales', country: 'IN' },
+      { baseSalaryCents: 60000, currency: 'USD', department: 'Sales', country: 'US' },
+      { baseSalaryCents: 40000, currency: 'USD', department: 'Sales', country: 'US' },
+    ]);
+    const service = new AnalyticsService(makeRepo());
+    const result = await service.getByCountry();
+    const us = result.find(c => c.country === 'US');
+    expect(us?.medianSalaryUsdCents).toBe(50000);
+  });
+
+  it('all employees in one country', async () => {
+    findAllForAnalytics.mockResolvedValue([
+      { baseSalaryCents: 50000, currency: 'USD', department: 'Engineering', country: 'US' },
+      { baseSalaryCents: 70000, currency: 'USD', department: 'Sales', country: 'US' },
+    ]);
+    const service = new AnalyticsService(makeRepo());
+    expect(await service.getByCountry()).toEqual([
+      { country: 'US', headcount: 2, totalPayrollUsdCents: 120000, averageSalaryUsdCents: 60000, medianSalaryUsdCents: 60000 },
+    ]);
+  });
+});
