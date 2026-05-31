@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { EmployeeService } from './employee.service.js';
-import { NotFoundError, ConflictError } from '../lib/errors.js';
+import { NotFoundError, ConflictError, ValidationError } from '../lib/errors.js';
 
 describe('EmployeeService.list', () => {
   it('returns { data, total, page, pageSize } and queries the repo with the right offset', async () => {
@@ -15,7 +15,9 @@ describe('EmployeeService.list', () => {
 
     const result = await service.list({ page: 2, pageSize: 10 });
 
-    expect(repo.findMany).toHaveBeenCalledWith({ skip: 10, take: 10 });
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 10 }),
+    );
     expect(repo.count).toHaveBeenCalled();
     expect(result).toEqual({ data: employees, total: 42, page: 2, pageSize: 10 });
   });
@@ -209,5 +211,114 @@ describe('EmployeeService.delete', () => {
     );
 
     await expect(service.delete('missing')).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe('EmployeeService.list — filtering, search, sorting', () => {
+  function makeRepo() {
+    return {
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    };
+  }
+
+  function makeService(repo: ReturnType<typeof makeRepo>) {
+    return new EmployeeService(
+      repo as unknown as ConstructorParameters<typeof EmployeeService>[0],
+    );
+  }
+
+  const searchOr = [
+    { firstName: { contains: 'ali', mode: 'insensitive' } },
+    { lastName: { contains: 'ali', mode: 'insensitive' } },
+    { email: { contains: 'ali', mode: 'insensitive' } },
+  ];
+
+  it('1. search builds a case-insensitive OR across firstName, lastName, email', async () => {
+    const repo = makeRepo();
+
+    await makeService(repo).list({ page: 1, pageSize: 20, search: 'ali' });
+
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { OR: searchOr } }),
+    );
+    expect(repo.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { OR: searchOr } }),
+    );
+  });
+
+  it('2. department & country become equality filters, ANDed with search', async () => {
+    const repo = makeRepo();
+
+    await makeService(repo).list({
+      page: 1,
+      pageSize: 20,
+      search: 'ali',
+      department: 'Engineering',
+      country: 'IN',
+    });
+
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { department: 'Engineering', country: 'IN', OR: searchOr },
+      }),
+    );
+  });
+
+  it('3a. sort="baseSalaryCents:desc" produces orderBy { baseSalaryCents: "desc" }', async () => {
+    const repo = makeRepo();
+
+    await makeService(repo).list({
+      page: 1,
+      pageSize: 20,
+      sort: 'baseSalaryCents:desc',
+    });
+
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { baseSalaryCents: 'desc' } }),
+    );
+  });
+
+  it('3b. no sort defaults to orderBy { lastName: "asc" }', async () => {
+    const repo = makeRepo();
+
+    await makeService(repo).list({ page: 1, pageSize: 20 });
+
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { lastName: 'asc' } }),
+    );
+  });
+
+  it('4. an unknown/disallowed sort field throws ValidationError and never queries', async () => {
+    const repo = makeRepo();
+
+    await expect(
+      makeService(repo).list({ page: 1, pageSize: 20, sort: 'salary:desc' }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(repo.findMany).not.toHaveBeenCalled();
+  });
+
+  it('5. pagination still applies on top of filter/search/sort', async () => {
+    const repo = makeRepo();
+
+    await makeService(repo).list({
+      page: 3,
+      pageSize: 25,
+      search: 'ali',
+      department: 'Engineering',
+      sort: 'hireDate:asc',
+    });
+
+    expect(repo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 50,
+        take: 25,
+        orderBy: { hireDate: 'asc' },
+      }),
+    );
   });
 });
