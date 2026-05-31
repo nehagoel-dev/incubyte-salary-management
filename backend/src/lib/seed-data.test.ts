@@ -97,4 +97,8 @@ describe("generateEmployees", () => {
     const covered = VALID_COUNTRIES.filter((c) => seen.has(c));
     expect(covered.length).toBeGreaterThanOrEqual(8);
   });
+
+  it("is a function", () => {
+    expect(typeof generateEmployees).toBe("function");
+  });
 });
