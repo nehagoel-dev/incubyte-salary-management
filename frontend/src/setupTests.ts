@@ -1,26 +1,15 @@
 import '@testing-library/jest-dom'
+import { afterEach, vi } from 'vitest'
+
+// Restore real timers after every test so fake-timer leaks never bleed into neighbours.
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 Object.defineProperty(window, 'ResizeObserver', {
   writable: true,
   value: class ResizeObserver {
-    private callback: ResizeObserverCallback
-    constructor(callback: ResizeObserverCallback) {
-      this.callback = callback
-    }
-    observe(target: Element) {
-      this.callback(
-        [
-          {
-            target,
-            contentRect: { width: 1000, height: 600, top: 0, left: 0, right: 1000, bottom: 600, x: 0, y: 0 } as DOMRectReadOnly,
-            borderBoxSize: [{ blockSize: 600, inlineSize: 1000 }],
-            contentBoxSize: [{ blockSize: 600, inlineSize: 1000 }],
-            devicePixelContentBoxSize: [{ blockSize: 600, inlineSize: 1000 }],
-          } as ResizeObserverEntry,
-        ],
-        this,
-      )
-    }
+    observe() {}
     unobserve() {}
     disconnect() {}
   },
