@@ -1,0 +1,9 @@
+import { Router } from 'express';
+import { makeAnalyticsController, type AnalyticsServicePort } from '../controllers/analytics.controller.js';
+
+export function createAnalyticsRouter(service: AnalyticsServicePort): Router {
+  const controller = makeAnalyticsController(service);
+  const router = Router();
+  router.get('/summary', controller.getSummary);
+  return router;
+}

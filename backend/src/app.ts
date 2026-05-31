@@ -2,6 +2,9 @@ import express, { type Express } from 'express';
 import { EmployeeService } from './services/employee.service.js';
 import { EmployeeRepository } from './repositories/employee.repository.js';
 import { createEmployeeRouter } from './routes/employee.routes.js';
+import { AnalyticsService } from './services/analytics.service.js';
+import { AnalyticsRepository } from './repositories/analytics.repository.js';
+import { createAnalyticsRouter } from './routes/analytics.routes.js';
 import { errorHandler } from './middleware/error-handler.js';
 
 export function createApp(): Express {
@@ -14,6 +17,9 @@ export function createApp(): Express {
 
   const employeeService = new EmployeeService(new EmployeeRepository());
   app.use('/api', createEmployeeRouter(employeeService));
+
+  const analyticsService = new AnalyticsService(new AnalyticsRepository());
+  app.use('/api/analytics', createAnalyticsRouter(analyticsService));
 
   app.use(errorHandler);
 
