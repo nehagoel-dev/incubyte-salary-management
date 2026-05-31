@@ -3,9 +3,10 @@ import { NotFoundError, ConflictError, ValidationError } from './../lib/errors.j
 import type {
   CreateEmployeeInput,
   UpdateEmployeeInput,
+  ListEmployeesQuery,
 } from '../schemas/employee.schema.js';
 
-export interface EmployeeReadRepository {
+export interface EmployeeRepositoryPort {
   findMany(args: {
     where?: Prisma.EmployeeWhereInput;
     orderBy?: Prisma.EmployeeOrderByWithRelationInput;
@@ -63,7 +64,7 @@ export interface Paginated<T> {
 }
 
 export class EmployeeService {
-  constructor(private readonly repo: EmployeeReadRepository) {}
+  constructor(private readonly repo: EmployeeRepositoryPort) {}
 
   async list({
     page,
@@ -72,14 +73,7 @@ export class EmployeeService {
     department,
     country,
     sort,
-  }: {
-    page: number;
-    pageSize: number;
-    search?: string;
-    department?: string;
-    country?: string;
-    sort?: string;
-  }): Promise<Paginated<Employee>> {
+  }: ListEmployeesQuery): Promise<Paginated<Employee>> {
     const where: Prisma.EmployeeWhereInput = {};
     if (department !== undefined) {
       where.department = department;
@@ -113,36 +107,27 @@ export class EmployeeService {
   }
 
   async create(data: CreateEmployeeInput): Promise<Employee> {
-    try {
-      return await this.repo.create(data);
-    } catch (err) {
-      if (isUniqueConstraintError(err)) {
-        throw new ConflictError('An employee with this email already exists');
-      }
-      throw err;
-    }
+    return this.run(() => this.repo.create(data));
   }
 
   async update(id: string, data: UpdateEmployeeInput): Promise<Employee> {
+    return this.run(() => this.repo.update(id, data), id);
+  }
+
+  async delete(id: string): Promise<void> {
+    return this.run(() => this.repo.delete(id), id);
+  }
+
+  /** Runs a repo write and translates known Prisma error codes to typed errors. */
+  private async run<T>(op: () => Promise<T>, id?: string): Promise<T> {
     try {
-      return await this.repo.update(id, data);
+      return await op();
     } catch (err) {
       if (isRecordNotFoundError(err)) {
         throw new NotFoundError(`Employee ${id} not found`);
       }
       if (isUniqueConstraintError(err)) {
         throw new ConflictError('An employee with this email already exists');
-      }
-      throw err;
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      await this.repo.delete(id);
-    } catch (err) {
-      if (isRecordNotFoundError(err)) {
-        throw new NotFoundError(`Employee ${id} not found`);
       }
       throw err;
     }

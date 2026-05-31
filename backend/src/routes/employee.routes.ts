@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import {
   makeEmployeeController,
-  type EmployeeListService,
+  type EmployeeServicePort,
 } from '../controllers/employee.controller.js';
 
-export function createEmployeeRouter(service: EmployeeListService): Router {
+export function createEmployeeRouter(service: EmployeeServicePort): Router {
   const controller = makeEmployeeController(service);
   const router = Router();
   router.get('/employees', controller.list);
