@@ -41,6 +41,93 @@ beforeEach(() => {
 })
 
 describe('EmployeesPage', () => {
+  describe('search, filter, and sort', () => {
+    beforeEach(() => {
+      vi.mocked(api.listEmployees).mockResolvedValue(makePage())
+    })
+
+    it('6. search input debounces and calls listEmployees with search param', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
+      vi.useFakeTimers()
+      try {
+        renderPage()
+        await vi.runAllTimersAsync()
+        await user.type(screen.getByRole('textbox', { name: /search/i }), 'alice')
+        vi.advanceTimersByTime(500)
+        await vi.runAllTimersAsync()
+        expect(api.listEmployees).toHaveBeenLastCalledWith({ search: 'alice', page: 1, pageSize: 20 })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('7. selecting a department calls listEmployees with department param', async () => {
+      renderPage()
+      await screen.findByText('Alice')
+      await userEvent.click(screen.getByRole('combobox', { name: /department/i }))
+      await userEvent.click(screen.getByRole('option', { name: 'Engineering' }))
+      expect(api.listEmployees).toHaveBeenLastCalledWith({ department: 'Engineering', page: 1, pageSize: 20 })
+    })
+
+    it('8. selecting a country calls listEmployees with country param', async () => {
+      renderPage()
+      await screen.findByText('Alice')
+      await userEvent.click(screen.getByRole('combobox', { name: /country/i }))
+      await userEvent.click(screen.getByRole('option', { name: 'US' }))
+      expect(api.listEmployees).toHaveBeenLastCalledWith({ country: 'US', page: 1, pageSize: 20 })
+    })
+
+    it('9. combined: search + department filter sends both params', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
+      vi.useFakeTimers()
+      try {
+        renderPage()
+        await vi.runAllTimersAsync()
+        await user.type(screen.getByRole('textbox', { name: /search/i }), 'alice')
+        vi.advanceTimersByTime(500)
+        await vi.runAllTimersAsync()
+        await user.click(screen.getByRole('combobox', { name: /department/i }))
+        await user.click(screen.getByRole('option', { name: 'Engineering' }))
+        await vi.runAllTimersAsync()
+        expect(api.listEmployees).toHaveBeenLastCalledWith({
+          search: 'alice',
+          department: 'Engineering',
+          page: 1,
+          pageSize: 20,
+        })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('10. changing a filter resets page to 1', async () => {
+      vi.mocked(api.listEmployees).mockResolvedValue(makePage({ total: 100 }))
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
+      vi.useFakeTimers()
+      try {
+        renderPage()
+        await vi.runAllTimersAsync()
+        await user.click(screen.getByRole('button', { name: /next/i }))
+        await vi.runAllTimersAsync()
+        await user.type(screen.getByRole('textbox', { name: /search/i }), 'alice')
+        vi.advanceTimersByTime(500)
+        await vi.runAllTimersAsync()
+        expect(api.listEmployees).toHaveBeenLastCalledWith({ search: 'alice', page: 1, pageSize: 20 })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('11. clicking a sort header toggles asc then desc', async () => {
+      renderPage()
+      await screen.findByText('Alice')
+      await userEvent.click(screen.getByRole('columnheader', { name: /salary/i }))
+      expect(api.listEmployees).toHaveBeenLastCalledWith({ sort: 'baseSalaryCents:asc', page: 1, pageSize: 20 })
+      await userEvent.click(screen.getByRole('columnheader', { name: /salary/i }))
+      expect(api.listEmployees).toHaveBeenLastCalledWith({ sort: 'baseSalaryCents:desc', page: 1, pageSize: 20 })
+    })
+  })
+
   it('1. shows a loading indicator while data is pending', () => {
     vi.mocked(api.listEmployees).mockReturnValue(new Promise(() => {}))
     renderPage()
