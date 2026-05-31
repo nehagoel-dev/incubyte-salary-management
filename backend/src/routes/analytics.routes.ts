@@ -5,5 +5,6 @@ export function createAnalyticsRouter(service: AnalyticsServicePort): Router {
   const controller = makeAnalyticsController(service);
   const router = Router();
   router.get('/summary', controller.getSummary);
+  router.get('/by-department', controller.getByDepartment);
   return router;
 }
