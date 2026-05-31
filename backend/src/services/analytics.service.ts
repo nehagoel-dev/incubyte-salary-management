@@ -12,6 +12,14 @@ export interface SummaryResult {
   medianSalaryUsdCents: number;
 }
 
+export interface CountryStat {
+  country: string;
+  headcount: number;
+  totalPayrollUsdCents: number;
+  averageSalaryUsdCents: number;
+  medianSalaryUsdCents: number;
+}
+
 export interface DepartmentStat {
   department: string;
   headcount: number;
@@ -69,5 +77,29 @@ export class AnalyticsService {
         };
       })
       .sort((a, b) => a.department.localeCompare(b.department));
+  }
+
+  async getByCountry(): Promise<CountryStat[]> {
+    const rows = await this.repo.findAllForAnalytics();
+    const groups = new Map<string, number[]>();
+    for (const r of rows) {
+      const usd = convertCents(r.baseSalaryCents, r.currency, 'USD');
+      if (!groups.has(r.country)) groups.set(r.country, []);
+      groups.get(r.country)!.push(usd);
+    }
+    return Array.from(groups.entries())
+      .map(([country, amounts]) => {
+        const headcount = amounts.length;
+        const total = amounts.reduce((s, v) => s + v, 0);
+        const sorted = [...amounts].sort((a, b) => a - b);
+        return {
+          country,
+          headcount,
+          totalPayrollUsdCents: total,
+          averageSalaryUsdCents: Math.round(total / headcount),
+          medianSalaryUsdCents: this.calcMedian(sorted),
+        };
+      })
+      .sort((a, b) => a.country.localeCompare(b.country));
   }
 }

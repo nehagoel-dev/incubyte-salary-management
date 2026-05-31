@@ -3,6 +3,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 export interface AnalyticsServicePort {
   getSummary(): Promise<unknown>;
   getByDepartment(): Promise<unknown>;
+  getByCountry(): Promise<unknown>;
 }
 
 export function makeAnalyticsController(service: AnalyticsServicePort) {
@@ -12,5 +13,8 @@ export function makeAnalyticsController(service: AnalyticsServicePort) {
   const getByDepartment = asyncHandler(async (_req, res) => {
     res.json(await service.getByDepartment());
   });
-  return { getSummary, getByDepartment };
+  const getByCountry = asyncHandler(async (_req, res) => {
+    res.json(await service.getByCountry());
+  });
+  return { getSummary, getByDepartment, getByCountry };
 }
