@@ -1,4 +1,4 @@
-import type { Employee } from '@prisma/client';
+import type { Employee, Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import type {
   CreateEmployeeInput,
@@ -6,12 +6,17 @@ import type {
 } from '../schemas/employee.schema.js';
 
 export class EmployeeRepository {
-  findMany(args: { skip: number; take: number }): Promise<Employee[]> {
+  findMany(args: {
+    where?: Prisma.EmployeeWhereInput;
+    orderBy?: Prisma.EmployeeOrderByWithRelationInput;
+    skip: number;
+    take: number;
+  }): Promise<Employee[]> {
     return prisma.employee.findMany(args);
   }
 
-  count(): Promise<number> {
-    return prisma.employee.count();
+  count(args?: { where?: Prisma.EmployeeWhereInput }): Promise<number> {
+    return prisma.employee.count(args);
   }
 
   findById(id: string): Promise<Employee | null> {
