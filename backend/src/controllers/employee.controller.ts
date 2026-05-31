@@ -9,7 +9,14 @@ import {
 
 /** Port the controller needs — satisfied structurally by EmployeeService. */
 export interface EmployeeListService {
-  list(params: { page: number; pageSize: number }): Promise<unknown>;
+  list(params: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    department?: string;
+    country?: string;
+    sort?: string;
+  }): Promise<unknown>;
   getById(id: string): Promise<unknown>;
   create(data: CreateEmployeeInput): Promise<unknown>;
   update(id: string, data: UpdateEmployeeInput): Promise<unknown>;
@@ -19,13 +26,17 @@ export interface EmployeeListService {
 const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().min(1).optional(),
+  department: z.string().min(1).optional(),
+  country: z.string().regex(/^[A-Z]{2}$/).optional(),
+  sort: z.string().regex(/^[a-zA-Z]+:(asc|desc)$/).optional(),
 });
 
 export function makeEmployeeController(service: EmployeeListService) {
   const list: RequestHandler = async (req, res, next) => {
     try {
-      const { page, pageSize } = listQuerySchema.parse(req.query);
-      const result = await service.list({ page, pageSize });
+      const query = listQuerySchema.parse(req.query);
+      const result = await service.list(query);
       res.json(result);
     } catch (err) {
       next(err);

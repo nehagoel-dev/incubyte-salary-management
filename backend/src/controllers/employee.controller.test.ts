@@ -75,6 +75,42 @@ describe('GET /api/employees', () => {
     expect(listMock).not.toHaveBeenCalled();
   });
 
+  it('6. forwards search to the service', async () => {
+    await request(createApp()).get('/api/employees?search=ali');
+
+    expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ search: 'ali' }));
+  });
+
+  it('7. forwards department to the service', async () => {
+    await request(createApp()).get('/api/employees?department=Engineering');
+
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({ department: 'Engineering' }),
+    );
+  });
+
+  it('8. forwards country to the service', async () => {
+    await request(createApp()).get('/api/employees?country=IN');
+
+    expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ country: 'IN' }));
+  });
+
+  it('9. forwards sort to the service', async () => {
+    await request(createApp()).get('/api/employees?sort=lastName:asc');
+
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 'lastName:asc' }),
+    );
+  });
+
+  it('10. returns 400 and does NOT call the service for a disallowed sort value', async () => {
+    const res = await request(createApp()).get('/api/employees?sort=lastName:up');
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+    expect(listMock).not.toHaveBeenCalled();
+  });
+
   it('5. returns 500 with a safe error body (no stack leaked) when service throws', async () => {
     listMock.mockRejectedValueOnce(new Error('db exploded: SUPER_SECRET_STACK'));
 
