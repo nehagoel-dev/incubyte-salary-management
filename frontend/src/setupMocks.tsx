@@ -42,18 +42,24 @@ vi.mock('@mantine/core', () => {
     )
   }
 
+  type SelectOption = string | { value: string; label: string }
+  const optVal = (o: SelectOption) => (typeof o === 'string' ? o : o.value)
+  const optLabel = (o: SelectOption) => (typeof o === 'string' ? o : o.label)
+
   function Select({
     label,
     data = [],
     value,
     onChange,
     placeholder,
+    error,
   }: {
     label?: string
-    data?: string[]
+    data?: SelectOption[]
     value?: string | null
     onChange?: (v: string | null) => void
     placeholder?: string
+    error?: React.ReactNode
     [k: string]: unknown
   }) {
     const [open, setOpen] = useState(false)
@@ -71,12 +77,13 @@ vi.mock('@mantine/core', () => {
         {open && (
           <ul role="listbox">
             {data.map((opt) => (
-              <li key={opt} role="option" onClick={() => { onChange?.(opt); setOpen(false) }}>
-                {opt}
+              <li key={optVal(opt)} role="option" onClick={() => { onChange?.(optVal(opt)); setOpen(false) }}>
+                {optLabel(opt)}
               </li>
             ))}
           </ul>
         )}
+        {error && <span>{error}</span>}
       </div>
     )
   }

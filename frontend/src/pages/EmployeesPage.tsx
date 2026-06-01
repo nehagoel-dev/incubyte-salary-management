@@ -13,9 +13,10 @@ import {
   Alert,
 } from '@mantine/core'
 import { IconPencil, IconTrash } from '@tabler/icons-react'
+import { notifications } from '@mantine/notifications'
 import { listEmployees, deleteEmployee } from '../lib/api'
 import type { Employee, ListEmployeesParams } from '../lib/api'
-import { DEPARTMENTS, COUNTRIES } from '../lib/constants'
+import { DEPARTMENTS, COUNTRIES, EMPLOYMENT_TYPE_LABELS } from '../lib/constants'
 import EmployeeFormModal from '../components/EmployeeFormModal'
 
 const PAGE_SIZE = 20
@@ -232,6 +233,11 @@ export default function EmployeesPage() {
       await deleteEmployee(deleteTarget)
       setDeleteTarget(null)
       setDeleteError(null)
+      notifications.show({
+        title: 'Employee deleted',
+        message: 'The employee has been removed successfully.',
+        color: 'teal',
+      })
       await fetchEmployees(buildEmployeeParams(queryRef.current))
     } catch {
       setDeleteTarget(null)
@@ -348,6 +354,8 @@ export default function EmployeesPage() {
               {
                 accessor: 'employmentType',
                 title: 'Type',
+                render: (employee) =>
+                  EMPLOYMENT_TYPE_LABELS[employee.employmentType as string] ?? employee.employmentType,
               },
               {
                 accessor: 'hireDate',
@@ -384,9 +392,12 @@ export default function EmployeesPage() {
           <Modal
             opened={deleteTarget !== null}
             onClose={() => setDeleteTarget(null)}
-            title="Confirm delete"
+            title="Delete employee"
             transitionProps={{ duration: 0 }}
           >
+            <Text size="sm" c="dimmed" mb="lg">
+              Are you sure you want to delete this employee? This action cannot be undone.
+            </Text>
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setDeleteTarget(null)}>
                 Cancel

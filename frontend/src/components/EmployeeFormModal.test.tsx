@@ -34,7 +34,7 @@ function renderModal(props?: { employee?: Employee; onClose?: () => void }) {
   return { onClose }
 }
 
-const SELECT_FIELDS = new Set(['department', 'country', 'employmentType'])
+const SELECT_FIELDS = new Set(['department', 'country', 'currency', 'employmentType'])
 
 async function fillAllFields(user: ReturnType<typeof userEvent.setup>, overrides: Partial<Record<string, string>> = {}) {
   const fields: Record<string, string> = {
@@ -44,7 +44,6 @@ async function fillAllFields(user: ReturnType<typeof userEvent.setup>, overrides
     department: 'Engineering',
     jobTitle: 'Engineer',
     country: 'US',
-    currency: 'USD',
     baseSalaryCents: '9000000',
     hireDate: '2022-06-01',
     ...overrides,
@@ -71,10 +70,14 @@ async function fillAllFields(user: ReturnType<typeof userEvent.setup>, overrides
     await user.click(screen.getByRole('option', { name: cntry }))
   }
 
-  // employmentType Select
+  // employmentType Select — click by display label, not raw value
+  const EMPLOYMENT_LABELS: Record<string, string> = {
+    FULL_TIME: 'Full Time', PART_TIME: 'Part Time', CONTRACT: 'Contract',
+  }
   const empType = overrides.employmentType ?? 'FULL_TIME'
+  const empLabel = EMPLOYMENT_LABELS[empType] ?? empType
   await user.click(screen.getByRole('combobox', { name: /employment.?type/i }))
-  await user.click(screen.getByRole('option', { name: empType }))
+  await user.click(screen.getByRole('option', { name: empLabel }))
 }
 
 beforeEach(() => {
@@ -153,7 +156,7 @@ describe('EmployeeFormModal', () => {
     expect(screen.getByRole('combobox', { name: /^department$/i })).toHaveValue('Engineering')
     expect(screen.getByRole('textbox', { name: /job.?title/i })).toHaveValue('Engineer')
     expect(screen.getByRole('combobox', { name: /^country$/i })).toHaveValue('US')
-    expect(screen.getByRole('textbox', { name: /currency/i })).toHaveValue('USD')
+    expect(screen.getByRole('combobox', { name: /^currency$/i })).toHaveValue('USD')
     expect(screen.getByRole('textbox', { name: /salary/i })).toHaveValue('8000000')
     expect(screen.getByRole('textbox', { name: /hire.?date/i })).toHaveValue('2022-01-01')
     expect(screen.getByRole('combobox', { name: /employment.?type/i })).toHaveValue('FULL_TIME')

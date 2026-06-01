@@ -13,7 +13,7 @@ import App from './App'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MantineProvider theme={theme}>
-      <Notifications />
+      <Notifications position="top-right" />
       <App />
     </MantineProvider>
   </StrictMode>,

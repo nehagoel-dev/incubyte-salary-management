@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Modal, TextInput, Select, Button, Group, Alert, Stack } from '@mantine/core'
 import { useForm } from '@mantine/form'
+import { notifications } from '@mantine/notifications'
 import { createEmployee, updateEmployee } from '../lib/api'
 import type { Employee } from '../lib/api'
-import { DEPARTMENTS, COUNTRIES } from '../lib/constants'
+import { DEPARTMENTS, COUNTRIES, CURRENCIES, COUNTRY_CURRENCY_MAP, EMPLOYMENT_TYPE_OPTIONS } from '../lib/constants'
 
 interface Props {
   opened: boolean
@@ -28,13 +29,21 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
       hireDate: employee?.hireDate ?? '',
       employmentType: employee?.employmentType ?? '',
     },
+    validateInputOnChange: true,
     validate: {
       firstName: (v) => (v.trim() ? null : 'First name is required'),
+      lastName: (v) => (v.trim() ? null : 'Last name is required'),
       email: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : 'Invalid email address'),
+      department: (v) => (v.trim() ? null : 'Department is required'),
+      jobTitle: (v) => (v.trim() ? null : 'Job title is required'),
+      country: (v) => (v.trim() ? null : 'Country is required'),
+      currency: (v) => (v.trim() ? null : 'Currency is required'),
       baseSalaryCents: (v) => {
         const n = parseInt(v, 10)
         return isNaN(n) || n < 0 ? 'Salary must be positive' : null
       },
+      hireDate: (v) => (v.trim() ? null : 'Hire date is required'),
+      employmentType: (v) => (v.trim() ? null : 'Employment type is required'),
     },
   })
 
@@ -56,8 +65,18 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
 
       if (employee) {
         await updateEmployee(employee.id, payload)
+        notifications.show({
+          title: 'Employee updated',
+          message: 'Employee details have been saved successfully.',
+          color: 'teal',
+        })
       } else {
         await createEmployee(payload)
+        notifications.show({
+          title: 'Employee added',
+          message: 'New employee has been created successfully.',
+          color: 'teal',
+        })
       }
 
       onSuccess?.()
@@ -78,7 +97,10 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
             label="Department"
             data={DEPARTMENTS}
             value={form.values.department}
-            onChange={(val) => form.setFieldValue('department', val ?? '')}
+            onChange={(val) => {
+              form.setFieldValue('department', val ?? '')
+              form.clearFieldError('department')
+            }}
             error={form.errors.department}
           />
           <TextInput label="Job Title" {...form.getInputProps('jobTitle')} />
@@ -86,17 +108,38 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
             label="Country"
             data={COUNTRIES}
             value={form.values.country}
-            onChange={(val) => form.setFieldValue('country', val ?? '')}
+            onChange={(val) => {
+              form.setFieldValue('country', val ?? '')
+              form.clearFieldError('country')
+              const mapped = val ? COUNTRY_CURRENCY_MAP[val] : undefined
+              if (mapped) {
+                form.setFieldValue('currency', mapped)
+                form.clearFieldError('currency')
+              }
+            }}
             error={form.errors.country}
           />
-          <TextInput label="Currency" {...form.getInputProps('currency')} />
+          <Select
+            label="Currency"
+            data={CURRENCIES}
+            value={form.values.currency}
+            onChange={(val) => {
+              form.setFieldValue('currency', val ?? '')
+              form.clearFieldError('currency')
+            }}
+            error={form.errors.currency}
+          />
           <TextInput label="Base Salary Cents" {...form.getInputProps('baseSalaryCents')} />
           <TextInput label="Hire Date" {...form.getInputProps('hireDate')} />
           <Select
             label="Employment Type"
-            data={['FULL_TIME', 'PART_TIME', 'CONTRACT']}
+            data={EMPLOYMENT_TYPE_OPTIONS}
             value={form.values.employmentType}
-            onChange={(val) => form.setFieldValue('employmentType', val ?? '')}
+            onChange={(val) => {
+              form.setFieldValue('employmentType', val ?? '')
+              form.clearFieldError('employmentType')
+            }}
+            error={form.errors.employmentType}
           />
         </Stack>
         {submitError && <Alert mt="sm" color="red">{submitError}</Alert>}
