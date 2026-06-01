@@ -118,8 +118,46 @@ vi.mock('@mantine/core', () => {
     return <h1>{children}</h1>
   }
 
-  return { MantineProvider, Group, TextInput, Select, Skeleton, Center, Text, Modal, Button, ActionIcon, Container, Title }
+  function Loader(_props: { [k: string]: unknown }) {
+    return <div data-testid="mantine-loader" />
+  }
+
+  function Alert({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+    return <div role="alert">{children}</div>
+  }
+
+  function Paper({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+    return <div>{children}</div>
+  }
+
+  function Stack({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+    return <div>{children}</div>
+  }
+
+  function SimpleGrid({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+    return <div>{children}</div>
+  }
+
+  return { MantineProvider, Group, TextInput, Select, Skeleton, Center, Text, Modal, Button, ActionIcon, Container, Title, Loader, Alert, Paper, Stack, SimpleGrid }
 })
+
+// Stub @mantine/charts — render dataKey labels as text spans so tests can assert on them.
+vi.mock('@mantine/charts', () => ({
+  BarChart: ({
+    data = [],
+    dataKey,
+  }: {
+    data?: Record<string, unknown>[]
+    dataKey?: string
+    [k: string]: unknown
+  }) => (
+    <div>
+      {data.map((item, i) => (
+        <span key={i}>{dataKey ? String(item[dataKey]) : ''}</span>
+      ))}
+    </div>
+  ),
+}))
 
 // Replace mantine-datatable DataTable with a simple table that renders column headers
 // (for sort tests) and rows, plus a Next button for pagination tests.
