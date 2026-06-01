@@ -6,12 +6,30 @@ import DashboardPage from './pages/DashboardPage'
 
 type Page = 'employees' | 'dashboard'
 
+function getPageFromPath(): Page {
+  return window.location.pathname === '/dashboard' ? 'dashboard' : 'employees'
+}
+
 export default function App() {
-  const [page, setPage] = useState<Page>('employees')
+  const [page, setPage] = useState<Page>(getPageFromPath)
+
+  function navigateTo(p: Page) {
+    window.history.pushState({}, '', `/${p}`)
+    setPage(p)
+  }
 
   useEffect(() => {
-    // Pre-warm the serverless function to reduce cold-start latency on first data request
-    fetch(`${import.meta.env.VITE_API_URL ?? ''}/health`).catch(() => {})
+    const onPopState = () => setPage(getPageFromPath())
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_URL ?? ''
+    fetch(`${base}/health`).catch(() => {})
+    fetch(`${base}/api/analytics/summary`).catch(() => {})
+    fetch(`${base}/api/analytics/by-department`).catch(() => {})
+    fetch(`${base}/api/analytics/by-country`).catch(() => {})
   }, [])
 
   return (
@@ -32,14 +50,14 @@ export default function App() {
           label="Dashboard"
           leftSection={<IconLayoutDashboard size={20} />}
           active={page === 'dashboard'}
-          onClick={() => setPage('dashboard')}
+          onClick={() => navigateTo('dashboard')}
           styles={{ label: { fontSize: '1rem', fontWeight: 500 } }}
         />
         <NavLink
           label="Employees"
           leftSection={<IconUsers size={20} />}
           active={page === 'employees'}
-          onClick={() => setPage('employees')}
+          onClick={() => navigateTo('employees')}
           styles={{ label: { fontSize: '1rem', fontWeight: 500 } }}
         />
       </AppShell.Navbar>

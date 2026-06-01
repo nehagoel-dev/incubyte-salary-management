@@ -310,7 +310,7 @@ export default function EmployeesPage() {
             striped 
             highlightOnHover
             fz="sm"
-            verticalSpacing="xs"
+            verticalSpacing={4}
             height={560}
             scrollAreaProps={{ type: 'auto' }}
             sortStatus={sortStatus}
@@ -341,11 +341,13 @@ export default function EmployeesPage() {
               {
                 accessor: 'country',
                 title: 'Country',
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
               },
               {
                 accessor: 'baseSalaryCents',
                 title: 'Salary',
                 sortable: true,
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
                 render: (employee) =>
                   new Intl.NumberFormat('en-US', {
                     style: 'currency',
@@ -355,12 +357,14 @@ export default function EmployeesPage() {
               {
                 accessor: 'employmentType',
                 title: 'Type',
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
                 render: (employee) =>
                   EMPLOYMENT_TYPE_LABELS[employee.employmentType as string] ?? employee.employmentType,
               },
               {
                 accessor: 'hireDate',
                 title: 'Hire Date',
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
                 render: (employee) => employee.hireDate.split('T')[0],
               },
               {

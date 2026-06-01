@@ -46,14 +46,16 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div data-testid="dashboard-loading">
-        <Stack gap="xl">
+        <Stack gap="md">
           <SimpleGrid cols={4}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} height={80} radius="md" />
+              <Skeleton key={i} height={64} radius="md" />
             ))}
           </SimpleGrid>
-          <Skeleton height={360} radius="md" />
-          <Skeleton height={360} radius="md" />
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Skeleton height={440} radius="md" style={{ width: '50%' }} />
+            <Skeleton height={440} radius="md" style={{ width: '50%' }} />
+          </div>
         </Stack>
       </div>
     )
@@ -64,67 +66,71 @@ export default function DashboardPage() {
   }
 
   return (
-    <Stack gap="xl">
+    <Stack gap="md">
       <SimpleGrid cols={4}>
-        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" fw={500} mb={4}>Headcount</Text>
-          <Title order={3}>{summary!.headcount}</Title>
+        <Paper p="sm" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="xs" c="dimmed" fw={500} mb={6}>Headcount</Text>
+          <Title order={4}>{summary!.headcount}</Title>
         </Paper>
-        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" fw={500} mb={4}>Total Payroll</Text>
-          <Title order={3}>{fmt(summary!.totalPayrollUsdCents)}</Title>
+        <Paper p="sm" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="xs" c="dimmed" fw={500} mb={6}>Total Payroll</Text>
+          <Title order={4}>{fmt(summary!.totalPayrollUsdCents)}</Title>
         </Paper>
-        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" fw={500} mb={4}>Average Salary</Text>
-          <Title order={3}>{fmt(summary!.averageSalaryUsdCents)}</Title>
+        <Paper p="sm" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="xs" c="dimmed" fw={500} mb={6}>Average Salary</Text>
+          <Title order={4}>{fmt(summary!.averageSalaryUsdCents)}</Title>
         </Paper>
-        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" fw={500} mb={4}>Median Salary</Text>
-          <Title order={3}>{fmt(summary!.medianSalaryUsdCents)}</Title>
+        <Paper p="sm" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="xs" c="dimmed" fw={500} mb={6}>Median Salary</Text>
+          <Title order={4}>{fmt(summary!.medianSalaryUsdCents)}</Title>
         </Paper>
       </SimpleGrid>
 
-      <Paper
-        p="lg"
-        withBorder
-        shadow="sm"
-        radius="md"
-        bg="white"
-        style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)' } as React.CSSProperties}
-      >
-        <Text size="lg" fw={700} mb="md">Average Salary by Department</Text>
-        <BarChart
-          data={deptData}
-          dataKey="department"
-          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
-          h={300}
-          valueFormatter={fmtAxis}
-          yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
-          xAxisProps={{ tick: { fontSize: 13 } }}
-          tickLine="y"
-        />
-      </Paper>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Paper
+          p="sm"
+          withBorder
+          shadow="sm"
+          radius="md"
+          bg="white"
+          style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)', width: '50%' } as React.CSSProperties}
+        >
+          <Text size="sm" fw={600} mb="lg">Average Salary by Department</Text>
+          <BarChart
+            data={deptData}
+            dataKey="department"
+            series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
+            h={460}
+            valueFormatter={fmtAxis}
+            yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
+            xAxisProps={{ tick: { fontSize: 11 } }}
+            barChartProps={{ barCategoryGap: '25%' }}
+            tickLine="y"
+          />
+        </Paper>
 
-      <Paper
-        p="lg"
-        withBorder
-        shadow="sm"
-        radius="md"
-        bg="white"
-        style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)' } as React.CSSProperties}
-      >
-        <Text size="lg" fw={700} mb="md">Average Salary by Country</Text>
-        <BarChart
-          data={countryData}
-          dataKey="country"
-          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
-          h={300}
-          valueFormatter={fmtAxis}
-          yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
-          xAxisProps={{ tick: { fontSize: 13 } }}
-          tickLine="y"
-        />
-      </Paper>
+        <Paper
+          p="sm"
+          withBorder
+          shadow="sm"
+          radius="md"
+          bg="white"
+          style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)', width: '50%' } as React.CSSProperties}
+        >
+          <Text size="sm" fw={600} mb="lg">Average Salary by Country</Text>
+          <BarChart
+            data={countryData}
+            dataKey="country"
+            series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
+            h={460}
+            valueFormatter={fmtAxis}
+            yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
+            xAxisProps={{ tick: { fontSize: 11 } }}
+            barChartProps={{ barCategoryGap: '25%' }}
+            tickLine="y"
+          />
+        </Paper>
+      </div>
     </Stack>
   )
 }
