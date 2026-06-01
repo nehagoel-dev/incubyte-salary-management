@@ -336,10 +336,11 @@ export default function EmployeesPage() {
             page={page}
             onPageChange={handlePageChange}
             recordsPerPage={PAGE_SIZE}
+            fetching={fetching}
             paginationWithEdges
             withTableBorder
             withColumnBorders
-            striped 
+            striped
             highlightOnHover
             fz="sm"
             verticalSpacing={1.5}
