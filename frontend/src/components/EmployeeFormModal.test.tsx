@@ -170,4 +170,30 @@ describe('EmployeeFormModal', () => {
     expect(api.createEmployee).not.toHaveBeenCalled()
     expect(api.updateEmployee).not.toHaveBeenCalled()
   })
+
+  it('8. createEmployee rejection: shows error alert and does not close modal', async () => {
+    vi.mocked(api.createEmployee).mockRejectedValue(new Error('Server error'))
+    const user = userEvent.setup()
+    const { onClose } = renderModal()
+
+    await fillAllFields(user)
+    await user.click(screen.getByRole('button', { name: /save|submit/i }))
+
+    await screen.findByRole('alert')
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('9. updateEmployee rejection: shows error alert and does not close modal', async () => {
+    vi.mocked(api.updateEmployee).mockRejectedValue(new Error('Server error'))
+    const user = userEvent.setup()
+    const { onClose } = renderModal({ employee: mockEmployee })
+
+    const firstNameInput = screen.getByRole('textbox', { name: /first.?name/i })
+    await user.clear(firstNameInput)
+    await user.type(firstNameInput, 'Robert')
+    await user.click(screen.getByRole('button', { name: /save|submit/i }))
+
+    await screen.findByRole('alert')
+    expect(onClose).not.toHaveBeenCalled()
+  })
 })

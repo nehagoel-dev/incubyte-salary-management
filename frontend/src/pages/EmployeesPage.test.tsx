@@ -244,4 +244,34 @@ describe('search, filter, and sort', () => {
       expect(api.listEmployees).toHaveBeenCalledTimes(2)
     })
   })
+
+  it('12. listEmployees rejection: shows error message and no table rows', async () => {
+    vi.mocked(api.listEmployees).mockRejectedValue(new Error('Network error'))
+    renderPage()
+    await screen.findByText(/failed to load|could not load|error loading/i)
+    expect(screen.queryAllByRole('row')).toHaveLength(0)
+  })
+
+  it('13. deleteEmployee rejection: shows an error notification', async () => {
+    vi.mocked(api.listEmployees).mockResolvedValue(makePage())
+    vi.mocked(api.deleteEmployee).mockRejectedValue(new Error('Server error'))
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Alice')
+
+    await user.click(screen.getByRole('button', { name: /delete/i }))
+    await user.click(screen.getByRole('button', { name: /confirm/i }))
+
+    await screen.findByRole('alert')
+  })
+
+  it('14. listEmployees is always called with page and pageSize params', async () => {
+    vi.mocked(api.listEmployees).mockResolvedValue(makePage())
+    renderPage()
+    await screen.findByText('Alice')
+
+    for (const [params] of vi.mocked(api.listEmployees).mock.calls) {
+      expect(params).toMatchObject({ page: expect.any(Number), pageSize: expect.any(Number) })
+    }
+  })
 })
