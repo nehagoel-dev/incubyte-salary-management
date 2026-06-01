@@ -310,16 +310,18 @@ export default function EmployeesPage() {
             striped 
             highlightOnHover
             fz="sm"
-            verticalSpacing={2}
-            horizontalSpacing={2}
+            verticalSpacing={1.5}
+            horizontalSpacing={"md"}
             height={560}
             scrollAreaProps={{ type: 'auto' }}
+            styles={{ header: { fontSize: '0.9rem', fontWeight: 600 } }}
             sortStatus={sortStatus}
             onSortStatusChange={handleSortChange}
             columns={[
               {
                 accessor: 'name',
                 title: 'Name',
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
                 render: (employee) => (
                   <>
                     <span>{employee.firstName}</span>{' '}
@@ -338,6 +340,7 @@ export default function EmployeesPage() {
               {
                 accessor: 'jobTitle',
                 title: 'Job Title',
+                cellsStyle: () => ({ whiteSpace: 'nowrap' }),
               },
               {
                 accessor: 'country',
@@ -371,8 +374,10 @@ export default function EmployeesPage() {
               {
                 accessor: 'actions',
                 title: '',
+                width: 72,
+                cellsStyle: () => ({ whiteSpace: 'nowrap', padding: '2px 6px' }),
                 render: (employee) => (
-                  <Group gap="xs">
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'nowrap' }}>
                     <ActionIcon
                       variant="subtle"
                       color="teal"
@@ -389,7 +394,7 @@ export default function EmployeesPage() {
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
-                  </Group>
+                  </div>
                 ),
               },
             ]}
