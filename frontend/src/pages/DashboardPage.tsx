@@ -97,10 +97,10 @@ export default function DashboardPage() {
                 data={deptData}
                 dataKey="department"
                 series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
-                h={460}
+                h={350}
                 valueFormatter={fmtAxis}
                 yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
-                xAxisProps={{ tick: { fontSize: 11 } }}
+                xAxisProps={{ tick: { fontSize: 9 }, height: 70 }}
                 barChartProps={{ barCategoryGap: '25%' }}
                 tickLine="y"
               />
@@ -112,10 +112,10 @@ export default function DashboardPage() {
                 data={countryData}
                 dataKey="country"
                 series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
-                h={460}
+                h={350}
                 valueFormatter={fmtAxis}
                 yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
-                xAxisProps={{ tick: { fontSize: 11 } }}
+                xAxisProps={{ tick: { fontSize: 9 }, height: 70 }}
                 barChartProps={{ barCategoryGap: '25%' }}
                 tickLine="y"
               />
