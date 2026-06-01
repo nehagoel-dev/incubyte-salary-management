@@ -87,6 +87,7 @@ export default function EmployeesPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [formOpened, setFormOpened] = useState(false)
   const [editTarget, setEditTarget] = useState<Employee | undefined>(undefined)
+  const [addFormKey, setAddFormKey] = useState(0)
 
   const [search, setSearch] = useState('')
   const [department, setDepartment] = useState<string | null>(null)
@@ -278,7 +279,7 @@ export default function EmployeesPage() {
           comboboxProps={{ transitionProps: { duration: 0 } }}
         />
 
-        <Button size="md" onClick={() => setFormOpened(true)}>Add Employee</Button>
+        <Button size="md" onClick={() => { setAddFormKey(k => k + 1); setFormOpened(true) }}>Add Employee</Button>
       </Group>
 
       {loading || (fetching && employees.length === 0) ? (
@@ -410,7 +411,7 @@ export default function EmployeesPage() {
           </Modal>
 
           <EmployeeFormModal
-            key={editTarget?.id ?? 'new'}
+            key={editTarget?.id ?? `new-${addFormKey}`}
             opened={formOpened}
             onClose={handleFormClose}
             onSuccess={handleFormSuccess}
