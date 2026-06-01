@@ -49,11 +49,11 @@ export default function DashboardPage() {
         <Stack gap="xl">
           <SimpleGrid cols={4}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} height={110} radius="md" />
+              <Skeleton key={i} height={80} radius="md" />
             ))}
           </SimpleGrid>
-          <Skeleton height={440} radius="md" />
-          <Skeleton height={440} radius="md" />
+          <Skeleton height={360} radius="md" />
+          <Skeleton height={360} radius="md" />
         </Stack>
       </div>
     )
@@ -66,21 +66,21 @@ export default function DashboardPage() {
   return (
     <Stack gap="xl">
       <SimpleGrid cols={4}>
-        <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="md" c="dimmed" fw={500} mb={6}>Headcount</Text>
-          <Title order={2}>{summary!.headcount}</Title>
+        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="sm" c="dimmed" fw={500} mb={4}>Headcount</Text>
+          <Title order={3}>{summary!.headcount}</Title>
         </Paper>
-        <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="md" c="dimmed" fw={500} mb={6}>Total Payroll</Text>
-          <Title order={2}>{fmt(summary!.totalPayrollUsdCents)}</Title>
+        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="sm" c="dimmed" fw={500} mb={4}>Total Payroll</Text>
+          <Title order={3}>{fmt(summary!.totalPayrollUsdCents)}</Title>
         </Paper>
-        <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="md" c="dimmed" fw={500} mb={6}>Average Salary</Text>
-          <Title order={2}>{fmt(summary!.averageSalaryUsdCents)}</Title>
+        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="sm" c="dimmed" fw={500} mb={4}>Average Salary</Text>
+          <Title order={3}>{fmt(summary!.averageSalaryUsdCents)}</Title>
         </Paper>
-        <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="md" c="dimmed" fw={500} mb={6}>Median Salary</Text>
-          <Title order={2}>{fmt(summary!.medianSalaryUsdCents)}</Title>
+        <Paper p="md" withBorder shadow="sm" radius="md" bg="white">
+          <Text size="sm" c="dimmed" fw={500} mb={4}>Median Salary</Text>
+          <Title order={3}>{fmt(summary!.medianSalaryUsdCents)}</Title>
         </Paper>
       </SimpleGrid>
 
@@ -97,7 +97,7 @@ export default function DashboardPage() {
           data={deptData}
           dataKey="department"
           series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
-          h={420}
+          h={300}
           valueFormatter={fmtAxis}
           yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
           xAxisProps={{ tick: { fontSize: 13 } }}
@@ -118,7 +118,7 @@ export default function DashboardPage() {
           data={countryData}
           dataKey="country"
           series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
-          h={420}
+          h={300}
           valueFormatter={fmtAxis}
           yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
           xAxisProps={{ tick: { fontSize: 13 } }}

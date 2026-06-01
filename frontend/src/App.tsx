@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppShell, NavLink, Group, Title, Text } from '@mantine/core'
 import { IconLayoutDashboard, IconUsers } from '@tabler/icons-react'
 import EmployeesPage from './pages/EmployeesPage'
@@ -8,6 +8,11 @@ type Page = 'employees' | 'dashboard'
 
 export default function App() {
   const [page, setPage] = useState<Page>('employees')
+
+  useEffect(() => {
+    // Pre-warm the serverless function to reduce cold-start latency on first data request
+    fetch(`${import.meta.env.VITE_API_URL ?? ''}/health`).catch(() => {})
+  }, [])
 
   return (
     <AppShell

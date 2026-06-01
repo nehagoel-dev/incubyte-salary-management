@@ -309,9 +309,9 @@ export default function EmployeesPage() {
             withColumnBorders
             striped 
             highlightOnHover
-            fz="h4"
-            verticalSpacing="sm"
-            height={1000}
+            fz="sm"
+            verticalSpacing="xs"
+            height={560}
             scrollAreaProps={{ type: 'auto' }}
             sortStatus={sortStatus}
             onSortStatusChange={handleSortChange}
