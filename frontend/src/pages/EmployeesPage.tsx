@@ -10,13 +10,14 @@ import {
   ActionIcon,
   TextInput,
   Select,
+  Alert,
 } from '@mantine/core'
 import { listEmployees, deleteEmployee } from '../lib/api'
 import type { Employee, ListEmployeesParams } from '../lib/api'
 import EmployeeFormModal from '../components/EmployeeFormModal'
 
 const PAGE_SIZE = 20
-const DEBOUNCE_MS = 500
+const DEBOUNCE_MS = 300
 
 const DEPARTMENTS = [
   'Engineering',
@@ -90,7 +91,9 @@ export default function EmployeesPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [formOpened, setFormOpened] = useState(false)
   const [editTarget, setEditTarget] = useState<Employee | undefined>(undefined)
 
@@ -120,6 +123,7 @@ export default function EmployeesPage() {
       }
 
       hasLoadedOnce.current = true
+      setLoadError(false)
       setEmployees(result.data)
       setTotal(result.total)
       setLoading(false)
@@ -129,6 +133,7 @@ export default function EmployeesPage() {
       }
 
       hasLoadedOnce.current = true
+      setLoadError(true)
       setEmployees([])
       setTotal(0)
       setLoading(false)
@@ -230,11 +235,15 @@ export default function EmployeesPage() {
       return
     }
 
-    await deleteEmployee(deleteTarget)
-
-    setDeleteTarget(null)
-
-    await fetchEmployees(buildEmployeeParams(queryRef.current))
+    try {
+      await deleteEmployee(deleteTarget)
+      setDeleteTarget(null)
+      setDeleteError(null)
+      await fetchEmployees(buildEmployeeParams(queryRef.current))
+    } catch {
+      setDeleteTarget(null)
+      setDeleteError('Failed to delete employee. Please try again.')
+    }
   }
 
   return (
@@ -272,12 +281,15 @@ export default function EmployeesPage() {
 
       {loading ? (
         <Skeleton data-testid="employees-loading" height={400} />
+      ) : loadError ? (
+        <Alert color="red">Failed to load employees. Please try again.</Alert>
       ) : employees.length === 0 ? (
         <Center>
           <Text>No employees found</Text>
         </Center>
       ) : (
         <>
+          {deleteError && <Alert color="red">{deleteError}</Alert>}
           <DataTable
             records={employees}
             totalRecords={total}

@@ -1,4 +1,5 @@
-import { Modal, TextInput, Select, Button, Group } from '@mantine/core'
+import { useState } from 'react'
+import { Modal, TextInput, Select, Button, Group, Alert } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { createEmployee, updateEmployee } from '../lib/api'
 import type { Employee } from '../lib/api'
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default function EmployeeFormModal({ opened, onClose, onSuccess, employee }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
   const form = useForm({
     initialValues: {
       firstName: employee?.firstName ?? '',
@@ -35,27 +38,32 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
   })
 
   async function handleSubmit(values: typeof form.values) {
-    const payload = {
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      department: values.department,
-      jobTitle: values.jobTitle,
-      country: values.country,
-      currency: values.currency,
-      baseSalaryCents: parseInt(values.baseSalaryCents, 10),
-      hireDate: values.hireDate,
-      employmentType: values.employmentType as Employee['employmentType'],
-    }
+    setSubmitError(null)
+    try {
+      const payload = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        department: values.department,
+        jobTitle: values.jobTitle,
+        country: values.country,
+        currency: values.currency,
+        baseSalaryCents: parseInt(values.baseSalaryCents, 10),
+        hireDate: values.hireDate,
+        employmentType: values.employmentType as Employee['employmentType'],
+      }
 
-    if (employee) {
-      await updateEmployee(employee.id, payload)
-    } else {
-      await createEmployee(payload)
-    }
+      if (employee) {
+        await updateEmployee(employee.id, payload)
+      } else {
+        await createEmployee(payload)
+      }
 
-    onSuccess?.()
-    onClose()
+      onSuccess?.()
+      onClose()
+    } catch {
+      setSubmitError('Failed to save employee. Please try again.')
+    }
   }
 
   return (
@@ -76,6 +84,7 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
           value={form.values.employmentType}
           onChange={(val) => form.setFieldValue('employmentType', val ?? '')}
         />
+        {submitError && <Alert color="red">{submitError}</Alert>}
         <Group>
           <Button type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save</Button>
