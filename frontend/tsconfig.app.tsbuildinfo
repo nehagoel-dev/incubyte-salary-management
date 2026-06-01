@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/setupmocks.tsx","./src/setuptests.ts","./src/api/analytics.ts","./src/api/client.ts","./src/api/employees.ts","./src/api/index.ts","./src/api/types.ts","./src/components/employeeformmodal.tsx","./src/lib/api.ts","./src/lib/constants.ts","./src/pages/dashboardpage.tsx","./src/pages/employeespage.tsx"],"version":"5.9.3"}

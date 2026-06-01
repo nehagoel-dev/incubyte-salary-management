@@ -10,5 +10,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
     },
+    typecheck: {
+      tsconfig: './tsconfig.test.json',
+    },
   },
 })
