@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Alert, Paper, Stack, SimpleGrid, Text, Skeleton, Title } from '@mantine/core'
 import { BarChart } from '@mantine/charts'
-import { getAnalyticsSummary, getAnalyticsByDepartment, getAnalyticsByCountry } from '../lib/api'
+import { fetchSummary, fetchDeptData, fetchCountryData } from '../lib/analyticsCache'
 import type { SummaryResult, DepartmentStat, CountryStat } from '../lib/api'
 
 const fmt = (cents: number) =>
@@ -10,40 +10,37 @@ const fmt = (cents: number) =>
 const fmtAxis = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(cents / 100)
 
+const chartStyle = {
+  overflow: 'visible',
+  '--chart-cursor-fill': 'rgba(0,0,0,0.04)',
+  width: '50%',
+} as React.CSSProperties
+
 export default function DashboardPage() {
   const [summary, setSummary] = useState<SummaryResult | null>(null)
   const [deptData, setDeptData] = useState<DepartmentStat[]>([])
   const [countryData, setCountryData] = useState<CountryStat[]>([])
-  const [loading, setLoading] = useState(true)
+  const [summaryLoading, setSummaryLoading] = useState(true)
+  const [chartsLoading, setChartsLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([
-      getAnalyticsSummary(),
-      getAnalyticsByDepartment(),
-      getAnalyticsByCountry(),
-    ])
-      .then(([s, d, c]) => {
-        if (cancelled) return
-        setSummary(s)
-        setDeptData(d)
-        setCountryData(c)
-        setLoading(false)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setError(true)
-        setLoading(false)
-      })
+    // Summary (fast query) — resolves first; shows stat cards immediately
+    fetchSummary()
+      .then(s => { if (!cancelled) { setSummary(s); setSummaryLoading(false) } })
+      .catch(() => { if (!cancelled) { setError(true); setSummaryLoading(false) } })
 
-    return () => {
-      cancelled = true
-    }
+    // Charts (heavier aggregation) — resolve independently
+    Promise.all([fetchDeptData(), fetchCountryData()])
+      .then(([d, c]) => { if (!cancelled) { setDeptData(d); setCountryData(c); setChartsLoading(false) } })
+      .catch(() => { if (!cancelled) setChartsLoading(false) })
+
+    return () => { cancelled = true }
   }, [])
 
-  if (loading) {
+  if (summaryLoading) {
     return (
       <div data-testid="dashboard-loading">
         <Stack gap="md">
@@ -53,8 +50,8 @@ export default function DashboardPage() {
             ))}
           </SimpleGrid>
           <div style={{ display: 'flex', gap: 16 }}>
-            <Skeleton height={440} radius="md" style={{ width: '50%' }} />
-            <Skeleton height={440} radius="md" style={{ width: '50%' }} />
+            <Skeleton height={500} radius="md" style={{ width: '50%' }} />
+            <Skeleton height={500} radius="md" style={{ width: '50%' }} />
           </div>
         </Stack>
       </div>
@@ -87,49 +84,44 @@ export default function DashboardPage() {
       </SimpleGrid>
 
       <div style={{ display: 'flex', gap: 16 }}>
-        <Paper
-          p="sm"
-          withBorder
-          shadow="sm"
-          radius="md"
-          bg="white"
-          style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)', width: '50%' } as React.CSSProperties}
-        >
-          <Text size="sm" fw={600} mb="lg">Average Salary by Department</Text>
-          <BarChart
-            data={deptData}
-            dataKey="department"
-            series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
-            h={460}
-            valueFormatter={fmtAxis}
-            yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
-            xAxisProps={{ tick: { fontSize: 11 } }}
-            barChartProps={{ barCategoryGap: '25%' }}
-            tickLine="y"
-          />
-        </Paper>
+        {chartsLoading ? (
+          <>
+            <Skeleton height={500} radius="md" style={{ width: '50%' }} />
+            <Skeleton height={500} radius="md" style={{ width: '50%' }} />
+          </>
+        ) : (
+          <>
+            <Paper p="sm" withBorder shadow="sm" radius="md" bg="white" style={chartStyle}>
+              <Text size="sm" fw={600} mb="lg">Average Salary by Department</Text>
+              <BarChart
+                data={deptData}
+                dataKey="department"
+                series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
+                h={460}
+                valueFormatter={fmtAxis}
+                yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
+                xAxisProps={{ tick: { fontSize: 11 } }}
+                barChartProps={{ barCategoryGap: '25%' }}
+                tickLine="y"
+              />
+            </Paper>
 
-        <Paper
-          p="sm"
-          withBorder
-          shadow="sm"
-          radius="md"
-          bg="white"
-          style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)', width: '50%' } as React.CSSProperties}
-        >
-          <Text size="sm" fw={600} mb="lg">Average Salary by Country</Text>
-          <BarChart
-            data={countryData}
-            dataKey="country"
-            series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
-            h={460}
-            valueFormatter={fmtAxis}
-            yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
-            xAxisProps={{ tick: { fontSize: 11 } }}
-            barChartProps={{ barCategoryGap: '25%' }}
-            tickLine="y"
-          />
-        </Paper>
+            <Paper p="sm" withBorder shadow="sm" radius="md" bg="white" style={chartStyle}>
+              <Text size="sm" fw={600} mb="lg">Average Salary by Country</Text>
+              <BarChart
+                data={countryData}
+                dataKey="country"
+                series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
+                h={460}
+                valueFormatter={fmtAxis}
+                yAxisProps={{ width: 70, tick: { fontSize: 11 } }}
+                xAxisProps={{ tick: { fontSize: 11 } }}
+                barChartProps={{ barCategoryGap: '25%' }}
+                tickLine="y"
+              />
+            </Paper>
+          </>
+        )}
       </div>
     </Stack>
   )

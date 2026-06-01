@@ -310,7 +310,8 @@ export default function EmployeesPage() {
             striped 
             highlightOnHover
             fz="sm"
-            verticalSpacing={4}
+            verticalSpacing={2}
+            horizontalSpacing={2}
             height={560}
             scrollAreaProps={{ type: 'auto' }}
             sortStatus={sortStatus}

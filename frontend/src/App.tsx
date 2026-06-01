@@ -3,6 +3,7 @@ import { AppShell, NavLink, Group, Title, Text } from '@mantine/core'
 import { IconLayoutDashboard, IconUsers } from '@tabler/icons-react'
 import EmployeesPage from './pages/EmployeesPage'
 import DashboardPage from './pages/DashboardPage'
+import { prefetchAnalytics } from './lib/analyticsCache'
 
 type Page = 'employees' | 'dashboard'
 
@@ -25,11 +26,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const base = import.meta.env.VITE_API_URL ?? ''
-    fetch(`${base}/health`).catch(() => {})
-    fetch(`${base}/api/analytics/summary`).catch(() => {})
-    fetch(`${base}/api/analytics/by-department`).catch(() => {})
-    fetch(`${base}/api/analytics/by-country`).catch(() => {})
+    // Warm up the serverless function
+    fetch(`${import.meta.env.VITE_API_URL ?? ''}/health`).catch(() => {})
+    // Start all three analytics fetches immediately — DashboardPage reuses these Promises
+    prefetchAnalytics()
   }, [])
 
   return (

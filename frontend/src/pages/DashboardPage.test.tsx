@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MantineProvider } from '@mantine/core'
 import DashboardPage from './DashboardPage'
 import * as api from '../lib/api'
+import { resetAnalyticsCache } from '../lib/analyticsCache'
 import type { SummaryResult, DepartmentStat, CountryStat } from '../lib/api'
 
 vi.mock('../lib/api')
@@ -65,6 +66,7 @@ function renderPage() {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  resetAnalyticsCache()
 })
 
 describe('DashboardPage', () => {
