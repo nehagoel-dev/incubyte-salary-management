@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Modal, TextInput, Select, Button, Group, Alert } from '@mantine/core'
+import { Modal, TextInput, Select, Button, Group, Alert, Stack } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { createEmployee, updateEmployee } from '../lib/api'
 import type { Employee } from '../lib/api'
+import { DEPARTMENTS, COUNTRIES } from '../lib/constants'
 
 interface Props {
   opened: boolean
@@ -69,23 +70,37 @@ export default function EmployeeFormModal({ opened, onClose, onSuccess, employee
   return (
     <Modal opened={opened} onClose={onClose} title={employee ? 'Edit Employee' : 'Add Employee'}>
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <TextInput label="First Name" {...form.getInputProps('firstName')} />
-        <TextInput label="Last Name" {...form.getInputProps('lastName')} />
-        <TextInput label="Email" {...form.getInputProps('email')} />
-        <TextInput label="Department" {...form.getInputProps('department')} />
-        <TextInput label="Job Title" {...form.getInputProps('jobTitle')} />
-        <TextInput label="Country" {...form.getInputProps('country')} />
-        <TextInput label="Currency" {...form.getInputProps('currency')} />
-        <TextInput label="Base Salary Cents" {...form.getInputProps('baseSalaryCents')} />
-        <TextInput label="Hire Date" {...form.getInputProps('hireDate')} />
-        <Select
-          label="Employment Type"
-          data={['FULL_TIME', 'PART_TIME', 'CONTRACT']}
-          value={form.values.employmentType}
-          onChange={(val) => form.setFieldValue('employmentType', val ?? '')}
-        />
-        {submitError && <Alert color="red">{submitError}</Alert>}
-        <Group>
+        <Stack gap="sm">
+          <TextInput label="First Name" {...form.getInputProps('firstName')} />
+          <TextInput label="Last Name" {...form.getInputProps('lastName')} />
+          <TextInput label="Email" {...form.getInputProps('email')} />
+          <Select
+            label="Department"
+            data={DEPARTMENTS}
+            value={form.values.department}
+            onChange={(val) => form.setFieldValue('department', val ?? '')}
+            error={form.errors.department}
+          />
+          <TextInput label="Job Title" {...form.getInputProps('jobTitle')} />
+          <Select
+            label="Country"
+            data={COUNTRIES}
+            value={form.values.country}
+            onChange={(val) => form.setFieldValue('country', val ?? '')}
+            error={form.errors.country}
+          />
+          <TextInput label="Currency" {...form.getInputProps('currency')} />
+          <TextInput label="Base Salary Cents" {...form.getInputProps('baseSalaryCents')} />
+          <TextInput label="Hire Date" {...form.getInputProps('hireDate')} />
+          <Select
+            label="Employment Type"
+            data={['FULL_TIME', 'PART_TIME', 'CONTRACT']}
+            value={form.values.employmentType}
+            onChange={(val) => form.setFieldValue('employmentType', val ?? '')}
+          />
+        </Stack>
+        {submitError && <Alert mt="sm" color="red">{submitError}</Alert>}
+        <Group mt="md">
           <Button type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save</Button>
         </Group>

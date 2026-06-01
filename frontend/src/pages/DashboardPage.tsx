@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Loader, Alert, Paper, Stack, SimpleGrid, Text } from '@mantine/core'
+import { Alert, Paper, Stack, SimpleGrid, Text, Skeleton, Title } from '@mantine/core'
 import { BarChart } from '@mantine/charts'
 import { getAnalyticsSummary, getAnalyticsByDepartment, getAnalyticsByCountry } from '../lib/api'
 import type { SummaryResult, DepartmentStat, CountryStat } from '../lib/api'
@@ -46,7 +46,15 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div data-testid="dashboard-loading">
-        <Loader />
+        <Stack gap="xl">
+          <SimpleGrid cols={4}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} height={110} radius="md" />
+            ))}
+          </SimpleGrid>
+          <Skeleton height={440} radius="md" />
+          <Skeleton height={440} radius="md" />
+        </Stack>
       </div>
     )
   }
@@ -59,20 +67,20 @@ export default function DashboardPage() {
     <Stack gap="xl">
       <SimpleGrid cols={4}>
         <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" mb={4}>Headcount</Text>
-          <Text size="xl" fw={700}>{summary!.headcount}</Text>
+          <Text size="md" c="dimmed" fw={500} mb={6}>Headcount</Text>
+          <Title order={2}>{summary!.headcount}</Title>
         </Paper>
         <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" mb={4}>Total Payroll</Text>
-          <Text size="xl" fw={700}>{fmt(summary!.totalPayrollUsdCents)}</Text>
+          <Text size="md" c="dimmed" fw={500} mb={6}>Total Payroll</Text>
+          <Title order={2}>{fmt(summary!.totalPayrollUsdCents)}</Title>
         </Paper>
         <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" mb={4}>Average Salary</Text>
-          <Text size="xl" fw={700}>{fmt(summary!.averageSalaryUsdCents)}</Text>
+          <Text size="md" c="dimmed" fw={500} mb={6}>Average Salary</Text>
+          <Title order={2}>{fmt(summary!.averageSalaryUsdCents)}</Title>
         </Paper>
         <Paper p="lg" withBorder shadow="sm" radius="md" bg="white">
-          <Text size="sm" c="dimmed" mb={4}>Median Salary</Text>
-          <Text size="xl" fw={700}>{fmt(summary!.medianSalaryUsdCents)}</Text>
+          <Text size="md" c="dimmed" fw={500} mb={6}>Median Salary</Text>
+          <Title order={2}>{fmt(summary!.medianSalaryUsdCents)}</Title>
         </Paper>
       </SimpleGrid>
 
@@ -84,14 +92,15 @@ export default function DashboardPage() {
         bg="white"
         style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)' } as React.CSSProperties}
       >
-        <Text size="md" fw={700} mb="md">Average Salary by Department</Text>
+        <Text size="lg" fw={700} mb="md">Average Salary by Department</Text>
         <BarChart
           data={deptData}
           dataKey="department"
-          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'blue' }]}
-          h={300}
+          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'teal' }]}
+          h={420}
           valueFormatter={fmtAxis}
-          yAxisProps={{ width: 80 }}
+          yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
+          xAxisProps={{ tick: { fontSize: 13 } }}
           tickLine="y"
         />
       </Paper>
@@ -104,14 +113,15 @@ export default function DashboardPage() {
         bg="white"
         style={{ overflow: 'visible', '--chart-cursor-fill': 'rgba(0,0,0,0.04)' } as React.CSSProperties}
       >
-        <Text size="md" fw={700} mb="md">Average Salary by Country</Text>
+        <Text size="lg" fw={700} mb="md">Average Salary by Country</Text>
         <BarChart
           data={countryData}
           dataKey="country"
-          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'green' }]}
-          h={300}
+          series={[{ name: 'averageSalaryUsdCents', label: 'Avg Salary', color: 'cyan' }]}
+          h={420}
           valueFormatter={fmtAxis}
-          yAxisProps={{ width: 80 }}
+          yAxisProps={{ width: 90, tick: { fontSize: 13 } }}
+          xAxisProps={{ tick: { fontSize: 13 } }}
           tickLine="y"
         />
       </Paper>

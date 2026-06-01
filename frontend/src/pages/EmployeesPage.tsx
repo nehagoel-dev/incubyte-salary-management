@@ -12,25 +12,14 @@ import {
   Select,
   Alert,
 } from '@mantine/core'
+import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { listEmployees, deleteEmployee } from '../lib/api'
 import type { Employee, ListEmployeesParams } from '../lib/api'
+import { DEPARTMENTS, COUNTRIES } from '../lib/constants'
 import EmployeeFormModal from '../components/EmployeeFormModal'
 
 const PAGE_SIZE = 20
 const DEBOUNCE_MS = 300
-
-const DEPARTMENTS = [
-  'Engineering',
-  'Product',
-  'Sales',
-  'Marketing',
-  'Finance',
-  'HR',
-  'Operations',
-  'Design',
-]
-
-const COUNTRIES = ['US', 'GB', 'DE', 'FR', 'NL', 'IN', 'CA', 'AU', 'JP', 'BR']
 
 type EmployeeQueryState = {
   page: number
@@ -91,6 +80,7 @@ export default function EmployeesPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [fetching, setFetching] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -110,6 +100,7 @@ export default function EmployeesPage() {
 
   const fetchEmployees = useCallback(async (params: ListEmployeesParams) => {
     const requestId = ++latestRequestId.current
+    setFetching(true)
 
     if (!hasLoadedOnce.current) {
       setLoading(true)
@@ -127,6 +118,7 @@ export default function EmployeesPage() {
       setEmployees(result.data)
       setTotal(result.total)
       setLoading(false)
+      setFetching(false)
     } catch {
       if (requestId !== latestRequestId.current) {
         return
@@ -137,6 +129,7 @@ export default function EmployeesPage() {
       setEmployees([])
       setTotal(0)
       setLoading(false)
+      setFetching(false)
     }
   }, [])
 
@@ -251,6 +244,7 @@ export default function EmployeesPage() {
       <Group mb="md" align="flex-end">
         <TextInput
           label="Search"
+          size="md"
           value={search}
           onChange={(event) => handleSearchChange(event.currentTarget.value)}
           placeholder="Search employees…"
@@ -258,6 +252,7 @@ export default function EmployeesPage() {
 
         <Select
           label="Department"
+          size="md"
           data={DEPARTMENTS}
           value={department}
           onChange={handleDepartmentChange}
@@ -268,6 +263,7 @@ export default function EmployeesPage() {
 
         <Select
           label="Country"
+          size="md"
           data={COUNTRIES}
           value={country}
           onChange={handleCountryChange}
@@ -276,11 +272,16 @@ export default function EmployeesPage() {
           comboboxProps={{ transitionProps: { duration: 0 } }}
         />
 
-        <Button onClick={() => setFormOpened(true)}>Add Employee</Button>
+        <Button size="md" onClick={() => setFormOpened(true)}>Add Employee</Button>
       </Group>
 
-      {loading ? (
-        <Skeleton data-testid="employees-loading" height={400} />
+      {loading || (fetching && employees.length === 0) ? (
+        <div data-testid="employees-loading" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Skeleton height={44} radius="sm" />
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} height={52} radius="sm" />
+          ))}
+        </div>
       ) : loadError ? (
         <Alert color="red">Failed to load employees. Please try again.</Alert>
       ) : employees.length === 0 ? (
@@ -296,8 +297,15 @@ export default function EmployeesPage() {
             page={page}
             onPageChange={handlePageChange}
             recordsPerPage={PAGE_SIZE}
-            paginationWithControls
+            paginationWithEdges
             withTableBorder
+            withColumnBorders
+            striped 
+            highlightOnHover
+            fz="h4"
+            verticalSpacing="sm"
+            height={1000}
+            scrollAreaProps={{ type: 'auto' }}
             sortStatus={sortStatus}
             onSortStatusChange={handleSortChange}
             columns={[
@@ -352,16 +360,20 @@ export default function EmployeesPage() {
                 render: (employee) => (
                   <Group gap="xs">
                     <ActionIcon
+                      variant="subtle"
+                      color="teal"
                       aria-label="Edit"
                       onClick={() => { setEditTarget(employee); setFormOpened(true) }}
                     >
-                      ✎
+                      <IconPencil size={16} />
                     </ActionIcon>
                     <ActionIcon
+                      variant="subtle"
+                      color="red"
                       aria-label="Delete"
                       onClick={() => setDeleteTarget(employee.id)}
                     >
-                      ×
+                      <IconTrash size={16} />
                     </ActionIcon>
                   </Group>
                 ),

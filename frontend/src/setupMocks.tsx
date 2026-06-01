@@ -138,7 +138,28 @@ vi.mock('@mantine/core', () => {
     return <div>{children}</div>
   }
 
-  return { MantineProvider, Group, TextInput, Select, Skeleton, Center, Text, Modal, Button, ActionIcon, Container, Title, Loader, Alert, Paper, Stack, SimpleGrid }
+  function NavLink({ label, onClick }: { label?: string; onClick?: () => void; [k: string]: unknown }) {
+    return <a role="link" style={{ cursor: 'pointer' }} onClick={onClick}>{label}</a>
+  }
+
+  const AppShell = Object.assign(
+    function AppShell({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+      return <div>{children}</div>
+    },
+    {
+      Header: function Header({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+        return <header>{children}</header>
+      },
+      Navbar: function Navbar({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+        return <nav>{children}</nav>
+      },
+      Main: function Main({ children }: { children?: React.ReactNode; [k: string]: unknown }) {
+        return <main>{children}</main>
+      },
+    }
+  )
+
+  return { MantineProvider, Group, TextInput, Select, Skeleton, Center, Text, Modal, Button, ActionIcon, Container, Title, Loader, Alert, Paper, Stack, SimpleGrid, NavLink, AppShell }
 })
 
 // Stub @mantine/charts — render dataKey labels as text spans so tests can assert on them.

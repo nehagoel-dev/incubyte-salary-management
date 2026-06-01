@@ -34,6 +34,8 @@ function renderModal(props?: { employee?: Employee; onClose?: () => void }) {
   return { onClose }
 }
 
+const SELECT_FIELDS = new Set(['department', 'country', 'employmentType'])
+
 async function fillAllFields(user: ReturnType<typeof userEvent.setup>, overrides: Partial<Record<string, string>> = {}) {
   const fields: Record<string, string> = {
     firstName: 'Bob',
@@ -49,10 +51,24 @@ async function fillAllFields(user: ReturnType<typeof userEvent.setup>, overrides
   }
 
   for (const [label, value] of Object.entries(fields)) {
-    if (value === '') continue
+    if (value === '' || SELECT_FIELDS.has(label)) continue
     const input = screen.getByRole('textbox', { name: new RegExp(label.replace(/([A-Z])/g, '.?$1'), 'i') })
     await user.clear(input)
     await user.type(input, value)
+  }
+
+  // department Select
+  const dept = overrides.department ?? 'Engineering'
+  if (dept !== '') {
+    await user.click(screen.getByRole('combobox', { name: /^department$/i }))
+    await user.click(screen.getByRole('option', { name: dept }))
+  }
+
+  // country Select
+  const cntry = overrides.country ?? 'US'
+  if (cntry !== '') {
+    await user.click(screen.getByRole('combobox', { name: /^country$/i }))
+    await user.click(screen.getByRole('option', { name: cntry }))
   }
 
   // employmentType Select
@@ -134,9 +150,9 @@ describe('EmployeeFormModal', () => {
     expect(screen.getByRole('textbox', { name: /first.?name/i })).toHaveValue('Alice')
     expect(screen.getByRole('textbox', { name: /last.?name/i })).toHaveValue('Smith')
     expect(screen.getByRole('textbox', { name: /email/i })).toHaveValue('alice@example.com')
-    expect(screen.getByRole('textbox', { name: /department/i })).toHaveValue('Engineering')
+    expect(screen.getByRole('combobox', { name: /^department$/i })).toHaveValue('Engineering')
     expect(screen.getByRole('textbox', { name: /job.?title/i })).toHaveValue('Engineer')
-    expect(screen.getByRole('textbox', { name: /country/i })).toHaveValue('US')
+    expect(screen.getByRole('combobox', { name: /^country$/i })).toHaveValue('US')
     expect(screen.getByRole('textbox', { name: /currency/i })).toHaveValue('USD')
     expect(screen.getByRole('textbox', { name: /salary/i })).toHaveValue('8000000')
     expect(screen.getByRole('textbox', { name: /hire.?date/i })).toHaveValue('2022-01-01')

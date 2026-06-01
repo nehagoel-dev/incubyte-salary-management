@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Container, Title, Group, Button } from '@mantine/core'
+import { AppShell, NavLink, Group, Title, Text } from '@mantine/core'
+import { IconLayoutDashboard, IconUsers } from '@tabler/icons-react'
 import EmployeesPage from './pages/EmployeesPage'
 import DashboardPage from './pages/DashboardPage'
 
@@ -9,13 +10,38 @@ export default function App() {
   const [page, setPage] = useState<Page>('employees')
 
   return (
-    <Container size="xl" py="md">
-      <Title mb="md">Salary Management</Title>
-      <Group mb="md">
-        <Button onClick={() => setPage('employees')}>Employees</Button>
-        <Button onClick={() => setPage('dashboard')}>Dashboard</Button>
-      </Group>
-      {page === 'employees' ? <EmployeesPage /> : <DashboardPage />}
-    </Container>
+    <AppShell
+      header={{ height: 70 }}
+      navbar={{ width: 240, breakpoint: 'sm' }}
+      padding="md"
+    >
+      <AppShell.Header px="md">
+        <Group h="100%" gap="sm">
+          <Title order={2} c="teal">ACME</Title>
+          <Text c="dimmed" size="md" fw={500}>Salary Management</Text>
+        </Group>
+      </AppShell.Header>
+
+      <AppShell.Navbar p="md">
+        <NavLink
+          label="Dashboard"
+          leftSection={<IconLayoutDashboard size={20} />}
+          active={page === 'dashboard'}
+          onClick={() => setPage('dashboard')}
+          styles={{ label: { fontSize: '1rem', fontWeight: 500 } }}
+        />
+        <NavLink
+          label="Employees"
+          leftSection={<IconUsers size={20} />}
+          active={page === 'employees'}
+          onClick={() => setPage('employees')}
+          styles={{ label: { fontSize: '1rem', fontWeight: 500 } }}
+        />
+      </AppShell.Navbar>
+
+      <AppShell.Main>
+        {page === 'employees' ? <EmployeesPage /> : <DashboardPage />}
+      </AppShell.Main>
+    </AppShell>
   )
 }

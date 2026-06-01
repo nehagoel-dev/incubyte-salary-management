@@ -10,7 +10,7 @@ import { errorHandler } from './middleware/error-handler.js';
 
 const corsOptions: CorsOptions = {
   origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
