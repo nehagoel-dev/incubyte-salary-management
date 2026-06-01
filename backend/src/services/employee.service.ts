@@ -82,11 +82,27 @@ export class EmployeeService {
       where.country = country;
     }
     if (search !== undefined) {
-      where.OR = [
+      const orConditions: Prisma.EmployeeWhereInput[] = [
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
       ];
+      const parts = search.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        orConditions.push({
+          AND: [
+            { firstName: { contains: parts[0], mode: 'insensitive' } },
+            { lastName: { contains: parts.slice(1).join(' '), mode: 'insensitive' } },
+          ],
+        });
+        orConditions.push({
+          AND: [
+            { firstName: { contains: parts.slice(1).join(' '), mode: 'insensitive' } },
+            { lastName: { contains: parts[0], mode: 'insensitive' } },
+          ],
+        });
+      }
+      where.OR = orConditions;
     }
 
     const orderBy = buildOrderBy(sort);
