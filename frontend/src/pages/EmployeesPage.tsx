@@ -12,7 +12,7 @@ import {
   Select,
   Alert,
 } from '@mantine/core'
-import { IconPencil, IconTrash } from '@tabler/icons-react'
+import { IconPencil, IconTrash, IconX } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { listEmployees, deleteEmployee } from '../lib/api'
 import type { Employee, ListEmployeesParams } from '../lib/api'
@@ -196,6 +196,19 @@ export default function EmployeesPage() {
     })
   }
 
+  function handleClearAll() {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+      debounceTimer.current = null
+    }
+    setSearch('')
+    setDepartment(null)
+    setCountry(null)
+    setPage(1)
+    queryRef.current = { ...INITIAL_QUERY_STATE }
+    void fetchEmployees(buildEmployeeParams(queryRef.current))
+  }
+
   function handlePageChange(nextPage: number) {
     setPage(nextPage)
 
@@ -255,6 +268,19 @@ export default function EmployeesPage() {
           value={search}
           onChange={(event) => handleSearchChange(event.currentTarget.value)}
           placeholder="Search employees…"
+          rightSection={
+            search ? (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Clear search"
+                onClick={() => handleSearchChange('')}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            ) : null
+          }
         />
 
         <Select
@@ -278,6 +304,12 @@ export default function EmployeesPage() {
           placeholder="All countries"
           comboboxProps={{ transitionProps: { duration: 0 } }}
         />
+
+        {(search || department || country) && (
+          <Button size="md" variant="subtle" color="gray" onClick={handleClearAll}>
+            Clear all filters
+          </Button>
+        )}
 
         <Button size="md" onClick={() => { setAddFormKey(k => k + 1); setFormOpened(true) }}>Add Employee</Button>
       </Group>
