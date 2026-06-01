@@ -13,6 +13,7 @@ import {
 } from '@mantine/core'
 import { listEmployees, deleteEmployee } from '../lib/api'
 import type { Employee, ListEmployeesParams } from '../lib/api'
+import EmployeeFormModal from '../components/EmployeeFormModal'
 
 const PAGE_SIZE = 20
 const DEBOUNCE_MS = 500
@@ -90,6 +91,8 @@ export default function EmployeesPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [formOpened, setFormOpened] = useState(false)
+  const [editTarget, setEditTarget] = useState<Employee | undefined>(undefined)
 
   const [search, setSearch] = useState('')
   const [department, setDepartment] = useState<string | null>(null)
@@ -213,6 +216,15 @@ export default function EmployeesPage() {
     })
   }
 
+  function handleFormClose() {
+    setFormOpened(false)
+    setEditTarget(undefined)
+  }
+
+  function handleFormSuccess() {
+    void fetchEmployees(buildEmployeeParams(queryRef.current))
+  }
+
   async function handleConfirmDelete() {
     if (!deleteTarget) {
       return
@@ -254,6 +266,8 @@ export default function EmployeesPage() {
           placeholder="All countries"
           comboboxProps={{ transitionProps: { duration: 0 } }}
         />
+
+        <Button onClick={() => setFormOpened(true)}>Add Employee</Button>
       </Group>
 
       {loading ? (
@@ -324,12 +338,20 @@ export default function EmployeesPage() {
                 accessor: 'actions',
                 title: '',
                 render: (employee) => (
-                  <ActionIcon
-                    aria-label="Delete"
-                    onClick={() => setDeleteTarget(employee.id)}
-                  >
-                    ×
-                  </ActionIcon>
+                  <Group gap="xs">
+                    <ActionIcon
+                      aria-label="Edit"
+                      onClick={() => { setEditTarget(employee); setFormOpened(true) }}
+                    >
+                      ✎
+                    </ActionIcon>
+                    <ActionIcon
+                      aria-label="Delete"
+                      onClick={() => setDeleteTarget(employee.id)}
+                    >
+                      ×
+                    </ActionIcon>
+                  </Group>
                 ),
               },
             ]}
@@ -351,6 +373,14 @@ export default function EmployeesPage() {
               </Button>
             </Group>
           </Modal>
+
+          <EmployeeFormModal
+            key={editTarget?.id ?? 'new'}
+            opened={formOpened}
+            onClose={handleFormClose}
+            onSuccess={handleFormSuccess}
+            employee={editTarget}
+          />
         </>
       )}
     </>

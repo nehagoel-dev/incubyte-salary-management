@@ -18,11 +18,13 @@ vi.mock('@mantine/core', () => {
     value,
     onChange,
     placeholder,
+    error,
   }: {
     label?: string
     value?: string
     onChange?: React.ChangeEventHandler<HTMLInputElement>
     placeholder?: string
+    error?: React.ReactNode
     [k: string]: unknown
   }) {
     return (
@@ -35,6 +37,7 @@ vi.mock('@mantine/core', () => {
           onChange={onChange}
           placeholder={placeholder}
         />
+        {error && <span>{error}</span>}
       </div>
     )
   }
